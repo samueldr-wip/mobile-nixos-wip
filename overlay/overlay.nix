@@ -85,6 +85,12 @@ in
       kernel-builder-gcc49 = callPackage ./mobile-nixos/kernel/builder.nix {
         stdenv = with self; overrideCC stdenv buildPackages.gcc49;
       };
+      kernel-builder-clang = callPackage ./mobile-nixos/kernel/builder.nix {
+        stdenv = self.clangStdenv;
+      };
+      kernel-builder-clang6 = callPackage ./mobile-nixos/kernel/builder.nix {
+        stdenv = with self; overrideCC clangStdenv buildPackages.clang_6;
+      };
     };
 
     imageBuilder = callPackage ../lib/image-builder {};
