@@ -39,6 +39,11 @@ in
     pulseaudio-modules-droid = callPackage ./pulseaudio-modules-droid { };
     xorg = super.xorg.overrideScope'(self: super: {
       xf86videohwcomposer = callPackage ./xf86-video-hwcomposer { };
+      xf86videofbdev = super.xf86videofbdev.overrideAttrs({patches ? [], ...}: {
+        patches = patches ++ [
+          ./xserver/0001-HACK-fbdev-don-t-bail-on-mode-initialization-fail.patch
+        ];
+      });
     }) # See all-packages.nix for more about this messy composition :/
     // { inherit (self) xlibsWrapper; };
     qt5-qpa-hwcomposer-plugin = self.qt5.callPackage ./qt5-qpa-hwcomposer-plugin { };
@@ -68,22 +73,6 @@ in
     #
 
     make_ext4fs = callPackage ./make_ext4fs {};
-
-    #
-    # Hacks
-    # -----
-    #
-    # Totally not upstreamable stuff.
-    #
-
-    xorg = super.xorg.overrideScope'(self: super: {
-      xf86videofbdev = super.xf86videofbdev.overrideAttrs({patches ? [], ...}: {
-        patches = patches ++ [
-          ./xserver/0001-HACK-fbdev-don-t-bail-on-mode-initialization-fail.patch
-        ];
-      });
-    }) # See all-packages.nix for more about this messy composition :/
-    // { inherit (self) xlibsWrapper; };
 
     #
     # Fixes to upstream
