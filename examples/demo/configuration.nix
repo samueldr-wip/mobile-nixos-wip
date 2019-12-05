@@ -19,7 +19,10 @@ in
         enable = true;
 
         libinput.enable = true;
-        videoDrivers = [ "fbdev" ];
+        videoDrivers = [
+          "hwcomposer"
+          #"fbdev"
+        ];
 
         # xfce has been chosen mainly because it is light, and quick to start.
         # FIXME: Find a better demo environment.
