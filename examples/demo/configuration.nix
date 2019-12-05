@@ -24,6 +24,11 @@ in
           #"fbdev"
         ];
 
+        moduleSection = ''
+          Load "libfb.so"
+          Load "libglamoregl.so"
+        '';
+
         # xfce has been chosen mainly because it is light, and quick to start.
         # FIXME: Find a better demo environment.
         desktopManager.xfce.enable = true;
