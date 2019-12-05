@@ -1,5 +1,6 @@
 {
 stdenv
+, buildPackages
 , lib
 , fetchFromGitHub
 , fetchpatch
@@ -52,6 +53,11 @@ stdenv.mkDerivation {
       name = "0005-eglplatform_wayland-link-libEGL-at-runtime.patch";
       sha256 = "1fgydb2i6awska47ajylahfw7azndqqc31nazvicai10b47b151b";
     })
+    (fetchpatch {
+      url = "https://github.com/libhybris/libhybris/commit/86f24e2d887ea536595ba2f9013321a57efb0719.patch";
+      sha256 = "0r5fi39wwl08b7bpfq4nx5x0rc9z19cvc5dw8bkmf8n7m3pz7i0d";
+      stripLen = 1;
+    })
   ];
 
   postAutoreconf = ''
@@ -60,6 +66,7 @@ stdenv.mkDerivation {
   '';
 
   configureFlags = [
+    "WAYLAND_SCANNER=${buildPackages.wayland}/bin/wayland-scanner"
     "--enable-wayland"
     "--enable-trace"
     "--enable-experimental"

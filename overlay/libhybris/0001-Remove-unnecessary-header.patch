@@ -1,0 +1,26 @@
+From 2e43a50f37d881301f5a37196dd3a8f83826b7de Mon Sep 17 00:00:00 2001
+From: Samuel Dionne-Riel <samuel@dionne-riel.com>
+Date: Thu, 5 Dec 2019 15:51:23 -0500
+Subject: [PATCH] Remove unnecessary header
+
+Based off 86f24e2d887ea536595ba2f9013321a57efb0719
+---
+ hybris/include/hybris/properties/properties.h | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/hybris/include/hybris/properties/properties.h b/hybris/include/hybris/properties/properties.h
+index 2632bdd..73a681c 100644
+--- a/include/hybris/properties/properties.h
++++ b/include/hybris/properties/properties.h
+@@ -25,8 +25,6 @@
+ #include <unistd.h>
+ #include <stdint.h>
+ 
+-#include <android-config.h>
+-
+ /* Based on Android */
+ #define PROP_SERVICE_NAME "property_service"
+ 
+-- 
+2.23.0
+
