@@ -18,6 +18,15 @@
     sha256 = "1s12fclrx1xgjjs4b5vmkj4nbq8hr05xfhp984dia79j6rysvq0m";
   };
 
+  
+  setSourceRoot = ''
+    export sourceRoot="$(echo */msm-4.4)"
+  '';
+
+  patches = [
+    ./0003-arch-arm64-Add-config-option-to-fix-bootloader-cmdli.patch
+  ];
+
   isModular = false;
 
 }).overrideAttrs({ postInstall ? "", postPatch ? "", ... }: {
