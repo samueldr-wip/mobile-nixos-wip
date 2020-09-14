@@ -1,0 +1,5 @@
+= Razer Phone
+include::_support/common.inc[]
+
+== Device-specific notes
+
