@@ -5,13 +5,17 @@
 , dtbTool
 }:
 
-(mobile-nixos.kernel-builder-gcc6 {
+let
+  inherit (buildPackages) dtc;
+in
+
+(mobile-nixos.kernel-builder {
   configfile = ./config.aarch64;
 
   file = "Image.gz-dtb";
   hasDTB = true;
 
-  version = "4.4-7083";
+  version = "4.4.153";
   src = fetchTarball {
     name = "msm-4.4-7083.tar";
     url = https://s3.amazonaws.com/cheryl-factory-images/msm-4.4-7083.tar;
@@ -24,18 +28,32 @@
   '';
 
   patches = [
+    ./0001-mobile-nixos-Adds-and-sets-BGRA-as-default.patch
+    ./0001-mobile-nixos-Workaround-selected-processor-does-not-.patch
     ./0003-arch-arm64-Add-config-option-to-fix-bootloader-cmdli.patch
   ];
 
   isModular = false;
 
-}).overrideAttrs({ postInstall ? "", postPatch ? "", ... }: {
+}).overrideAttrs({ postInstall ? "", postPatch ? "", nativeBuildInputs, ... }: {
   installTargets = [ "zinstall" "Image.gz-dtb" "install" ];
   postPatch = postPatch + ''
-    cp -v "${./compiler-gcc6.h}" "./include/linux/compiler-gcc6.h"
+    # FIXME : factor out
+    (
+    # Remove -Werror from all makefiles
+    local i
+    local makefiles="$(find . -type f -name Makefile)
+    $(find . -type f -name Kbuild)"
+    for i in $makefiles; do
+      sed -i 's/-Werror-/-W/g' "$i"
+      sed -i 's/-Werror=/-W/g' "$i"
+      sed -i 's/-Werror//g' "$i"
+    done
+    )
   '';
+  nativeBuildInputs = nativeBuildInputs ++ [ dtc ];
+
   postInstall = postInstall + ''
-    mkdir -p "$out/dtbs/"
     cp -v "$buildRoot/arch/arm64/boot/Image.gz-dtb" "$out/"
   '';
 })
