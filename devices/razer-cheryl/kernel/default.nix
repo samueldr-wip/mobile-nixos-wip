@@ -22,7 +22,6 @@ in
     sha256 = "1s12fclrx1xgjjs4b5vmkj4nbq8hr05xfhp984dia79j6rysvq0m";
   };
 
-  
   setSourceRoot = ''
     export sourceRoot="$(echo */msm-4.4)"
   '';
@@ -34,7 +33,6 @@ in
   ];
 
   isModular = false;
-
 }).overrideAttrs({ postInstall ? "", postPatch ? "", nativeBuildInputs, ... }: {
   installTargets = [ "zinstall" "Image.gz-dtb" "install" ];
   postPatch = postPatch + ''
