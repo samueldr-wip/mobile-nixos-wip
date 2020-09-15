@@ -1,5 +1,6 @@
 {
   mobile-nixos
+, fetchFromGitHub
 , kernelPatches ? [] # FIXME
 , buildPackages
 , dtbTool
@@ -16,15 +17,13 @@ in
   hasDTB = true;
 
   version = "4.4.153";
-  src = fetchTarball {
-    name = "msm-4.4-7083.tar";
-    url = https://s3.amazonaws.com/cheryl-factory-images/msm-4.4-7083.tar;
-    sha256 = "1s12fclrx1xgjjs4b5vmkj4nbq8hr05xfhp984dia79j6rysvq0m";
+  src = fetchFromGitHub {
+    owner = "LineageOS";
+    repo = "android_kernel_razer_msm8998";
+    rev = "d216cec5945665e51bfa04dbe0f74626ecd8801c";
+    sha256 = "0npmpsv6mid9vd7yqbnzx83ddhqxdmjfh0mpl06gqx4ywqbc8ph0";
   };
 
-  setSourceRoot = ''
-    export sourceRoot="$(echo */msm-4.4)"
-  '';
 
   patches = [
     ./0001-mobile-nixos-Adds-and-sets-BGRA-as-default.patch
