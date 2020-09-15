@@ -21,7 +21,7 @@
 
   mobile.system.android.bootimg = {
     flash = {
-      offset_base = "0x80000000";
+      offset_base = "0x00000000";
       offset_kernel = "0x00008000";
       offset_ramdisk = "0x01000000";
       offset_second = "0x00f00000";
