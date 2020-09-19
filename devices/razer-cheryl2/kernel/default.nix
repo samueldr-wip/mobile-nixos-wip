@@ -31,7 +31,15 @@ in
 
   isModular = false;
 }).overrideAttrs({ postInstall ? "", postPatch ? "", nativeBuildInputs, ... }: {
-  installTargets = [ "zinstall" "Image.gz-dtb" "install" ];
+  installTargets = [
+    # uh, things seem screwey with that vendor kernel tree, and dependencies
+    # are not resolved as expected, so let's ask for the compressed kernel
+    # explictly first :/.
+    "Image.gz"
+    "zinstall"
+    "Image.gz-dtb"
+    "install"
+  ];
   postPatch = postPatch + ''
     # FIXME : factor out
     (
