@@ -9,19 +9,21 @@ let
   inherit (buildPackages) dtc;
 in
 
-(mobile-nixos.kernel-builder-clang_9 {
+(mobile-nixos.kernel-builder-gcc49 {
   configfile = ./config.aarch64;
 
   file = "Image.gz-dtb";
   hasDTB = true;
 
+  version = "4.9.112";
+  # FIXME: host under mobile-nixos org
+  # FIXME: Factor out patches from official dump
   src = fetchFromGitHub {
-    owner = "arter97";
-    repo = "android_kernel_razer_sdm845";
-    rev = "231039a3ca33c05b1fc80afcc237061820d3195d";
-    sha256 = "1zwklsq45y92dybnyp0axnxqn0bl064304min37if933nlsbjqfd";
+    owner = "samueldr";
+    repo = "linux";
+    rev = "08abfe32a9988ad87bf5601eaff22aec94077278"; # Known good
+    sha256 = "0al49vp51i4zy4a0q9my6kg9s4q95fi0d8ipnm48a3csljyggrzp";
   };
-  version = "4.9.197";
 
   patches = [
     ./0001-mobile-nixos-Adds-and-sets-BGRA-as-default.patch
