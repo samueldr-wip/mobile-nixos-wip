@@ -9,6 +9,7 @@ let
   inherit (buildPackages) dtc;
 in
 
+# Vendor builds with gcc 4.9 → "gcc version 4.9.x 20150123"
 (mobile-nixos.kernel-builder-gcc49 {
   configfile = ./config.aarch64;
 
@@ -16,19 +17,16 @@ in
   hasDTB = true;
 
   version = "4.9.112";
-  # FIXME: host under mobile-nixos org
-  # FIXME: Factor out patches from official dump
-  src = fetchFromGitHub {
-    owner = "samueldr";
-    repo = "linux";
-    rev = "08abfe32a9988ad87bf5601eaff22aec94077278"; # Known good
-    sha256 = "0al49vp51i4zy4a0q9my6kg9s4q95fi0d8ipnm48a3csljyggrzp";
-  };
+  src = /Users/samuel/tmp/linux/razer-aura-vendor;
 
   patches = [
-    ./0001-mobile-nixos-Adds-and-sets-BGRA-as-default.patch
+    #./0001-mobile-nixos-Adds-and-sets-BGRA-as-default.patch
     ./0001-mobile-nixos-Workaround-selected-processor-does-not-.patch
     ./0003-arch-arm64-Add-config-option-to-fix-bootloader-cmdli.patch
+  ];
+
+  makeFlags = [
+    "DTC_EXT=${dtc}/bin/dtc"
   ];
 
   isModular = false;
