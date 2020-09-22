@@ -1,5 +1,12 @@
 { config, lib, pkgs, ... }:
 
+# cd /sys/class/leds
+# for f in *channel*/brightness *channel*/led_current; do echo 25 > $f; done
+# echo 255 > wled/brightness # screen brightness
+# /sys/class/leds # cat wled/max_brightness 
+# 4095
+
+
 {
   mobile.device.name = "razer-cheryl2";
   mobile.device.identity = {
