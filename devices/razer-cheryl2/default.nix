@@ -36,7 +36,6 @@
   mobile.system.vendor.partition = "/dev/disk/by-partlabel/vendor_a";
 
   boot.kernelParams = [
-    "video=vfb:640x400,bpp=32,memsize=3072000"
     "console=tty1"
     "quiet"
   ];
