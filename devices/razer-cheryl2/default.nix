@@ -37,7 +37,6 @@
 
   boot.kernelParams = [
     "video=vfb:640x400,bpp=32,memsize=3072000"
-    "hellorazer=hi_1"
     "console=tty1"
     "quiet"
   ];
