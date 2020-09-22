@@ -53,4 +53,56 @@
   mobile.usb.gadgetfs.functions = {
     rndis = "gsi.rndis";
   };
+
+  # for f in *channel*/brightness *channel*/led_current; do echo 25 > $f; done
+  mobile.boot.stage-1.tasks = [
+    # This dims the display during boot.
+    # This is used as a temporary measure to let the user know the boot is going fine.
+    #(pkgs.writeText "dim-display.rb" ''
+    #  class Tasks::DimDisplayAtBoot < SingletonTask
+    #    DRIVER = "/sys/class/leds/wled"
+
+    #    def initialize()
+    #      add_dependency(:Mount, "/sys")
+    #      add_dependency(:Files, DRIVER)
+    #    end
+
+    #    def run()
+    #      # ~10%... probably not if the driver is not linear.
+    #      System.write(File.join(DRIVER, "brightness"), (0.10*4095).to_s)
+    #      System.sleep(0.1)
+    #      System.write(File.join(DRIVER, "brightness"), (0.10*4095).to_s)
+    #      System.sleep(0.1)
+    #      System.write(File.join(DRIVER, "brightness"), (0.10*4095).to_s)
+    #      System.sleep(0.1)
+    #    end
+    #  end
+    #'')
+
+    # This activates the vibrator during boot.
+    # This is used as a temporary measure to let the user know the boot is going fine.
+    (pkgs.writeText "vibrate.rb" ''
+      class Tasks::VibrateAtBoot < SingletonTask
+        DRIVER = "/sys/class/leds/vibrator/"
+
+        def initialize()
+          add_dependency(:Mount, "/sys")
+          add_dependency(:Files, DRIVER)
+        end
+
+        def brrrr(duration)
+          System.write(File.join(DRIVER, "duration"), duration.to_s)
+          System.write(File.join(DRIVER, "activate"), "1")
+        end
+
+        def run()
+          brrrr(200)
+          System.sleep(0.6)
+          brrrr(500)
+          System.sleep(0.6)
+          brrrr(200)
+        end
+      end
+    '')
+  ];
 }
