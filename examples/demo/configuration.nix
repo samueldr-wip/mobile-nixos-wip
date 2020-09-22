@@ -36,7 +36,7 @@ in
         enable = true;
 
         libinput.enable = true;
-        videoDrivers = lib.mkDefault [ "fbdev" ];
+        videoDrivers = lib.mkDefault [ "modesetting" "fbdev" ];
 
         # Automatically login as nixos.
         displayManager.lightdm = {
@@ -225,15 +225,5 @@ in
         '';
       };
     }
-
-    # FIXME : depthcharge is the wrong assumption.
-    # A better abstraction over the X11 stack is required within mobile-nixos.
-    # The qemu VM requires the fbdev one to work as expcted.
-    # The android devices may have hwcomposer stuff coming.
-    (lib.mkIf (system_type == "depthcharge") {
-      services.xserver = {
-        videoDrivers = [ "modesetting" ];
-      };
-    })
   ];
 }
