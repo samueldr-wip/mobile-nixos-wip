@@ -97,7 +97,7 @@
   mobile.usb.idProduct = "D001";
 
   mobile.usb.gadgetfs.functions = {
-    #rndis = "gsi.rndis";
+    rndis = "gsi.rndis";
     # FIXME: This is the right function name, but doesn't work.
     # adb = "ffs.usb0";
   };
