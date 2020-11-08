@@ -14,27 +14,29 @@ class Tasks::FixupSDHCIArasan < SingletonTask
   def run()
     tries = 0
 
-    $stdout.print " -> Waiting for #{NAME}"
-    $stdout.flush
-    until Dir.glob(GLOB).length > 0 do
-      $stdout.print "."
+    Progress.exec_with_message("Waiting for #{NAME} to appear...") do
+      $stdout.print " -> Waiting for #{NAME}"
       $stdout.flush
-      tries += 1
-      begin
-        System.write(File.join(DRIVER, "unbind"), NAME)
-      rescue => e
-        $logger.fatal(e.inspect)
-      end
-      begin
-        System.write(File.join(DRIVER, "bind"), NAME)
-      rescue => e
-        $logger.fatal(e.inspect)
-      end
+      until Dir.glob(GLOB).length > 0 do
+        $stdout.print "."
+        $stdout.flush
+        tries += 1
+        begin
+          System.write(File.join(DRIVER, "unbind"), NAME)
+        rescue => e
+          $logger.fatal(e.inspect)
+        end
+        begin
+          System.write(File.join(DRIVER, "bind"), NAME)
+        rescue => e
+          $logger.fatal(e.inspect)
+        end
 
-      sleep(1)
-      raise "Couldn't get #{NAME} up in #{tries} tries." if tries > MAX
+        sleep(1)
+        raise "Couldn't get #{NAME} up in #{tries} tries." if tries > MAX
+      end
+      $stdout.puts "!\n"
     end
-    $stdout.puts "!\n"
 
     log("Took #{tries} tries for #{NAME} to appear...")
   end
