@@ -8,7 +8,7 @@
   };
 
   mobile.hardware = {
-    soc = "qualcomm-msm8926";
+    soc = "qualcomm-msm8226";
     ram = 512;
     screen = {
       width = 320; height = 320;
