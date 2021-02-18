@@ -44,10 +44,10 @@
   ];
 
   mobile.usb.mode = "android_usb";
-  # Google
-  mobile.usb.idVendor = "18D1";
-  # "Nexus/Pixel Device (MTP + debug)"
-  mobile.usb.idProduct = "4EE2";
+  # ASUSTek Computer, Inc.
+  mobile.usb.idVendor = "0B05";
+  # Android
+  mobile.usb.idProduct = "7771";
 
   mobile.system.type = "android";
 
