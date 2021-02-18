@@ -16,13 +16,12 @@ mobile-nixos.kernel-builder-gcc8 {
   version = "3.10.40";
   configfile = ./config.armv7;
 
-  src = /Users/samuel/tmp/linux/android-msm-sparrow-3.10-marshmallow-mr1-wear-release;
-  #src = fetchFromGitHub {
-  #  owner = "samueldr";
-  #  repo = "linux";
-  #  rev = "8ffc85d0e5dba485a52a4405a21d3a516f969420"; # android-msm-sparrow-3.10-marshmallow-mr1-wear-release
-  #  sha256 = "000000h5s3lvkdinglqmhm2hyfw4w0hqzzh1xla1i9wfc31ddbap";
-  #};
+  src = fetchFromGitHub {
+    owner = "samueldr";
+    repo = "linux";
+    rev = "8ffc85d0e5dba485a52a4405a21d3a516f969420"; # android-msm-sparrow-3.10-marshmallow-mr1-wear-release
+    sha256 = "1193s8hpkz3nx6qi8p7ppqk61wsgjwzifd7rzbzhl93xkzxicjsp";
+  };
 
   patches = [
     ./0001-mobile-nixos-Adds-and-sets-BGRA-as-default.patch
