@@ -86,5 +86,5 @@
   #             < things start breaking now >
   #              ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
   #
-  quirks.fb-refresher.enable = lib.mkForce false;
+  mobile.quirks.fb-refresher.enable = lib.mkForce false;
 }
