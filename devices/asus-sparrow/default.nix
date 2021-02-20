@@ -87,4 +87,7 @@
   #              ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
   #
   mobile.quirks.fb-refresher.enable = lib.mkForce false;
+
+  # 16 MiB boot partition, the kernel is a bit bloaty...
+  mobile.boot.stage-1.compression = lib.mkDefault "xz";
 }
