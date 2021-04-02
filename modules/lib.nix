@@ -12,6 +12,9 @@ in
 {
   lib = {
     mobile-nixos = {
+      verbosely = str: val:
+        if false then builtins.trace str val
+        else val;
       # `config.lib.mobile-nixos.composeConfig` is the supported method used to
       # re-evaluate a configuration with additional configuration.
       # Can be used exactly like `evalConfig`, with one additional param.

@@ -38,12 +38,12 @@ in
         let
           result = selectedPlatform.system != localSystem.system;
         in
-        builtins.trace
+        config.lib.mobile-nixos.verbosely
         "Building with crossSystem?: ${selectedPlatform.system} != ${localSystem.system} → ${if result then "we are" else "we're not"}."
         result
       )
       (
-        builtins.trace
+        config.lib.mobile-nixos.verbosely
         "    crossSystem: config: ${selectedPlatform.config}"
         selectedPlatform
       )
