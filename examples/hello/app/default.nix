@@ -12,6 +12,7 @@ let
     "lvgui/fiddlier.rb"
     "lvgui/lvgl/*.rb"
     "lvgui/lvgui/*.rb"
+    "lvgui/mobile_nixos/*.rb"
     "lvgui/vtconsole.rb"
   ];
 in
