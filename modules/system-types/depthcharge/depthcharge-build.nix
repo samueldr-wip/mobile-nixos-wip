@@ -48,10 +48,20 @@ let
   name = "mobile-nixos-${device_name}";
 
   # https://github.com/thefloweringash/kevin-nix/issues/3
-  make-kernel-its = fetchurl {
-    url = "https://raw.githubusercontent.com/thefloweringash/kevin-nix/e4156870bdb0a374b92c2291e5061d2c1a6c14b3/modules/make-kernel-its.sh";
-    sha256 = "05918hcmrgrj71hiq460gpzz8lngz2ccf617m9p4c82s43v4agmg";
-  };
+  make-kernel-its = runCommandNoCC "make-kernel-its.sh" {
+      src = fetchurl {
+      url = "https://raw.githubusercontent.com/thefloweringash/kevin-nix/e4156870bdb0a374b92c2291e5061d2c1a6c14b3/modules/make-kernel-its.sh";
+      sha256 = "05918hcmrgrj71hiq460gpzz8lngz2ccf617m9p4c82s43v4agmg";
+    };
+  } ''
+    cat $src > $out
+    substituteInPlace $out \
+      --replace     "fdt@"     "fdt__" \
+      --replace    "hash@"    "hash__" \
+      --replace    "conf@"    "conf__" \
+      --replace  "kernel@"  "kernel__" \
+      --replace "ramdisk@" "ramdisk__" \
+  '';
 
   # The image file containing the kernel and initrd.
   kpart = runCommandNoCC "kpart-${device_name}" {
