@@ -20,7 +20,10 @@
   };
 
   mobile.system.depthcharge.kpart = {
-    dtbs = "${config.mobile.boot.stage-1.kernel.package}/dtbs/rockchip";
+    dtbs = pkgs.runCommandNoCC "asus-dumo-dtbs" { } ''
+      mkdir -p $out
+      cp -t $out/ ${config.mobile.boot.stage-1.kernel.package}/dtbs/rockchip/rk3399-gru-scarlet*dtb
+    '';
   };
 
   # Serial console on ttyS2, using a suzyqable or equivalent.
