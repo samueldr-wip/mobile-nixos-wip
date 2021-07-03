@@ -24,6 +24,7 @@ mobile-nixos.kernel-builder {
 
   patches = [
     ./0001-gru-Force-hs200-for-eMMC.patch
+    ./0001-Revert-drm-atomic-Take-the-atomic-toys-away-from-X.patch
 
     # usb: dwc3: Enable userspace role switch control 
     (sdrPatch "03aedba687e2aacb258aa0f92876c48f5bde30e7" "09701lbb06daix9cs22yf0nm8wvb7cmybh19s2lbr0b5fn9s73fh")
