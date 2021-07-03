@@ -3939,9 +3939,11 @@ CONFIG_USB_HID=y
 #
 # I2C HID support
 #
-# CONFIG_I2C_HID_OF is not set
+CONFIG_I2C_HID_OF=y
 # CONFIG_I2C_HID_OF_GOODIX is not set
 # end of I2C HID support
+
+CONFIG_I2C_HID_CORE=y
 # end of HID support
 
 CONFIG_USB_OHCI_LITTLE_ENDIAN=y
