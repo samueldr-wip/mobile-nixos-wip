@@ -72,4 +72,10 @@
   services.xserver.deviceSection = ''
     Option "Atomic" "True"
   '';
+
+  # `mem` suspend doesn't work.
+  # (vendor chromeos-4.4 *and* mainline)
+  systemd.sleep.extraConfig = ''
+    SuspendState=freeze
+  '';
 }
