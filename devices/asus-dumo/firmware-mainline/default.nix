@@ -4,7 +4,7 @@
 }:
 
 # The minimum set of firmware files required for the device.
-runCommandNoCC "asus-dumo-firmware" {
+runCommandNoCC "asus-dumo-firmware-mainline" {
   src = firmwareLinuxNonfree;
 } ''
   for firmware in \
