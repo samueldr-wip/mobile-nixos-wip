@@ -1,0 +1,26 @@
+From 955c52b9c52c34c1a4191228f1986e9b03d96eb8 Mon Sep 17 00:00:00 2001
+From: Samuel Dionne-Riel <samuel@dionne-riel.com>
+Date: Sat, 3 Jul 2021 15:51:36 -0400
+Subject: [PATCH 3/5] rkisp1-dev: Fix format '%d' expects argument of type
+ 'int', but argument 3 has type 'long int'
+
+---
+ drivers/media/platform/rockchip/rkisp1/rkisp1-dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/rockchip/rkisp1/rkisp1-dev.c b/drivers/media/platform/rockchip/rkisp1/rkisp1-dev.c
+index e9f5bfa81e5f0..d55df22d021fd 100644
+--- a/drivers/media/platform/rockchip/rkisp1/rkisp1-dev.c
++++ b/drivers/media/platform/rockchip/rkisp1/rkisp1-dev.c
+@@ -559,7 +559,7 @@ static int rkisp1_probe(struct platform_device *pdev)
+ 
+ 	rkisp1->alloc_ctx = vb2_dma_contig_init_ctx(rkisp1->v4l2_dev.dev);
+ 	if (IS_ERR(rkisp1->alloc_ctx)) {
+-		dev_err(dev, "Failed to init alloc ctx: %d\n",
++		dev_err(dev, "Failed to init alloc ctx: %ld\n",
+ 			PTR_ERR(rkisp1->alloc_ctx));
+ 		goto err_unreg_v4l2_dev;
+ 	}
+-- 
+2.29.2
+

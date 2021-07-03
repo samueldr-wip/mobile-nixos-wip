@@ -1,0 +1,51 @@
+From dcba4edd30bb72842e1e92579513b29ea6f37f15 Mon Sep 17 00:00:00 2001
+From: Samuel Dionne-Riel <samuel@dionne-riel.com>
+Date: Thu, 18 Mar 2021 01:47:17 -0400
+Subject: [PATCH 4/5] [HACK] trace firmware loads and filp_open
+
+The latter is useful to spy on kernel stealing files from the filesystem
+without going through the firmware subsystem.
+---
+ drivers/base/firmware_class.c | 5 +++++
+ fs/open.c                     | 2 ++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
+index 3bf1cdee8f49d..3c2302c9da400 100644
+--- a/drivers/base/firmware_class.c
++++ b/drivers/base/firmware_class.c
+@@ -342,6 +342,9 @@ static int fw_get_filesystem_firmware(struct device *device,
+ 
+ 		len = snprintf(path, PATH_MAX, "%s/%s",
+ 			       fw_path[i], buf->fw_id);
++
++		printk("[TRACE] fw_get_filesystem_firmware(); // %s\n", path);
++
+ 		if (len >= PATH_MAX) {
+ 			rc = -ENAMETOOLONG;
+ 			break;
+@@ -1131,6 +1134,8 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
+ 		goto out;
+ 	}
+ 
++	printk("[TRACE] _request_firmware(); // %s\n", name);
++
+ 	ret = _request_firmware_prepare(&fw, name, device);
+ 	if (ret <= 0) /* error or already assigned */
+ 		goto out;
+diff --git a/fs/open.c b/fs/open.c
+index 56943c0d148c3..f72c89035ad0f 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -1011,6 +1011,8 @@ struct file *filp_open(const char *filename, int flags, umode_t mode)
+ {
+ 	struct filename *name = getname_kernel(filename);
+ 	struct file *file = ERR_CAST(name);
++
++	printk("[TRACE] filp_open(); // %s\n", filename);
+ 	
+ 	if (!IS_ERR(name)) {
+ 		file = file_open_name(name, flags, mode);
+-- 
+2.29.2
+
