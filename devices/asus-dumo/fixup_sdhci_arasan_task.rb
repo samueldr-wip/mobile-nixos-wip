@@ -1,7 +1,7 @@
 # This hack unbinds and rebinds the currently problematic storage driver.
 class Tasks::FixupSDHCIArasan < SingletonTask
   MAX = 60;
-  NAME = "fe330000.sdhci"
+  NAME = "fe330000.mmc"
   DRIVER = "/sys/bus/platform/drivers/sdhci-arasan"
   GLOB = "#{DRIVER}/#{NAME}/mmc_host/mmc*/mmc*/block"
 
