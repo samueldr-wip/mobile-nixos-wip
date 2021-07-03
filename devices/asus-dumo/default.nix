@@ -55,7 +55,7 @@
 
   mobile.boot.stage-1.bootConfig = {
     # Used by target-disk-mode to share the internal drive
-    storage.internal = "/dev/disk/by-path/platform-fe330000.sdhci";
+    storage.internal = "/dev/disk/by-path/platform-fe330000.mmc";
   };
 
   mobile.boot.stage-1.tasks = [
