@@ -12,14 +12,14 @@ let
   };
 in
 mobile-nixos.kernel-builder {
-  version = "5.10.0";
+  version = "5.13.0";
   configfile = ./config.aarch64;
 
   src = fetchFromGitHub {
     owner = "torvalds";
     repo = "linux";
-    rev = "v5.10";
-    sha256 = "1znxp4v7ykfz4fghzjzhd5mj9pj5qpk88n7k7nbkr5x2n0xqfj6k";
+    rev = "v5.13";
+    sha256 = "1bgcicq01sqwshzn9s730fw30756sqg5wdm6mraxmf131xn3vmim";
   };
 
   patches = [
