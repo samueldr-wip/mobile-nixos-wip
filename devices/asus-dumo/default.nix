@@ -62,4 +62,11 @@
     ./fixup_sdhci_arasan_task.rb
     ./usb_role_switch_task.rb
   ];
+
+  # This makes use of "atomic mode setting".
+  # This is needed for proper panel power management.
+  # *sigh*
+  services.xserver.deviceSection = ''
+    Option "Atomic" "True"
+  '';
 }
