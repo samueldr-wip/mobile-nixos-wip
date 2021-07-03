@@ -37,6 +37,9 @@ mobile-nixos.kernel-builder {
 
     # arm64: dts: rockchip: Set type-c port to OTG and enable role switch for gru-scarlet
     (sdrPatch "cbe4e04bf85d8d37058f89853a8ac0ad518a3e42" "139a9pkaya41nkar3mbcvfvg3xnxr3cr9ja9b320r2cn4qnrbjjc")
+    
+    # Work around regression that breaks DRM on asus-dumo (scarlet).
+    ./0001-Revert-arm64-dts-rockchip-fix-pd_tcpc0-and-pd_tcpc1-.patch
   ];
 
   isModular = false;
