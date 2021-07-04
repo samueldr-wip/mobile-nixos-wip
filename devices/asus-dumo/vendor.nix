@@ -4,6 +4,14 @@ lib.mkIf (config.mobile.boot.stage-1.kernel.provenance == "vendor")
 {
   mobile.boot.stage-1 = {
     kernel.package = pkgs.callPackage ./kernel-vendor {};
+    kernel.modular = true;
+    kernel.modules = [
+      "ath10k_pci"          
+      "ath10k_core"
+      "ath"                              
+      "ar10k_mac80211"        
+      "ar10k_ath"                  
+    ];
   };
 
   mobile.device.firmware = pkgs.callPackage ./firmware-vendor {};
