@@ -41,6 +41,10 @@ in
         # Automatically login as nixos.
         displayManager.lightdm = {
           enable = true;
+          greeters.gtk.extraConfig = ''
+            [greeter]
+            keyboard=${pkgs.onboard}/bin/onboard
+          '';
         };
         displayManager.autoLogin = {
           enable = true;
@@ -56,6 +60,7 @@ in
       hardware.pulseaudio.enable = true;
 
       environment.systemPackages = with pkgs; [
+        lightlocker
         dtc
         file
         (writeShellScriptBin "firefox" ''
@@ -63,6 +68,11 @@ in
           exec ${pkgs.firefox}/bin/firefox "$@"
         '')
         sgtpuzzles
+
+        # Shim for light-locker
+        (writeShellScriptBin "xfce4-screensaver-command" ''
+          exec ${lightlocker}/bin/light-locker-command "$@"
+        '')
       ];
 
       # Hacky way to setup an initial brightness
