@@ -37,6 +37,18 @@ in
       default = false;
       description = "enable when SOC is msm8998";
     };
+    hardware.socs.qualcomm-qm215.enable = mkOption {
+      type = types.bool;
+      default = false;
+      # Snapdragon 425, 427, 430 and 435 are pin and software compatible;
+      # software compatible with Snapdragon 429, 439, 450, 625, 626 and 632.
+      # The Qualcomm 215 [...] is a toned-down variant of the Snapdragon 425.
+      description = ''
+        enable when SOC is QM215
+
+        Software-compatible with MSM8937
+      '';
+    };
     hardware.socs.qualcomm-sdm660.enable = mkOption {
       type = types.bool;
       default = false;
@@ -81,6 +93,12 @@ in
     }
     {
       mobile = mkIf cfg.qualcomm-msm8998.enable {
+        system.system = "aarch64-linux";
+        quirks.fb-refresher.enable = true;
+      };
+    }
+    {
+      mobile = mkIf cfg.qualcomm-qm215.enable {
         system.system = "aarch64-linux";
         quirks.fb-refresher.enable = true;
       };
