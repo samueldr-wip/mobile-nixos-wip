@@ -77,4 +77,7 @@
     # Used by target-disk-mode to share the internal drive
     storage.internal = "/dev/disk/by-partlabel/userdata";
   };
+
+  # XXX: initial testing; vendor ships 32 bit system.
+  #mobile.system.system = lib.mkForce "armv7l-linux";
 }
