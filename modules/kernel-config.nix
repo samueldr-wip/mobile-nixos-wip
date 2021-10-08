@@ -74,7 +74,7 @@ in
         CRYPTO_HMAC = yes;
         CRYPTO_SHA256 = yes;
         SYSFS_DEPRECATED = no;
-        UEVENT_HELPER_PATH = freeform ''""'';
+        UEVENT_HELPER = no;
         FW_LOADER_USER_HELPER = option no;
         SCSI = yes;
         BLK_DEV_BSG = yes;
