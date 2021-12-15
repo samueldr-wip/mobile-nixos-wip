@@ -38,6 +38,9 @@ in
         TMPFS_POSIX_ACL = yes;
         TMPFS_XATTR = yes;
 
+        RD_GZIP = yes;
+        RD_XZ = yes;
+
         # Executive decision that EXT4 is required.
         EXT4_FS = yes;
         EXT4_FS_POSIX_ACL = yes;
