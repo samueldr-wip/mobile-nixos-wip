@@ -89,6 +89,14 @@ in
         SCSI = yes;
         BLK_DEV_BSG = yes;
         DEVPTS_MULTIPLE_INSTANCES = whenOlder "4.7" yes;
+
+        # XXX
+        PANIC_TIMEOUT = freeform "1";
+
+        # 1000 Hz is the preferred choice for desktop systems and other
+        # systems requiring fast interactive responses to events.
+        HZ = freeform "1000";
+        HZ_1000 = yes;
       })
       # Needed for logo at boot
       (helpers: with helpers; {
