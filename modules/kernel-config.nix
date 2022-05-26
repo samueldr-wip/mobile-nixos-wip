@@ -40,11 +40,6 @@ in
         EXT4_FS = yes;
         EXT4_FS_POSIX_ACL = yes;
 
-        # Required config for Nix
-        NAMESPACES = yes;
-        USER_NS = yes;
-        PID_NS = yes;
-
         # Additional options
         SYSVIPC = yes;
 
@@ -76,6 +71,13 @@ in
         FW_LOADER_USER_HELPER = option no;
         BLK_DEV_BSG = yes;
         DEVPTS_MULTIPLE_INSTANCES = whenOlder "4.7" yes;
+      })
+      # Needed for NixOS features
+      (helpers: with helpers; {
+        # Required config for Nix
+        NAMESPACES = yes;
+        USER_NS = yes;
+        PID_NS = yes;
       })
     ];
 
