@@ -74,6 +74,28 @@ in
       })
       # Needed for NixOS features
       (helpers: with helpers; {
+        # Firewall
+        # needed for nftables
+        # Networking Options
+        NETFILTER                   = yes;
+        NETFILTER_ADVANCED          = yes;
+        NF_CONNTRACK                = yes;
+        # Core Netfilter Configuration
+        NF_CONNTRACK_ZONES          = yes;
+        NF_CONNTRACK_EVENTS         = yes;
+        NF_CONNTRACK_TIMEOUT        = yes;
+        NF_CONNTRACK_TIMESTAMP      = yes;
+        # FIXME: >= 4.4
+        # NETFILTER_NETLINK_GLUE_CT   = yes;
+
+        IP_NF_RAW = yes; # needed for NETFILTER_XT_TARGET_CT
+        IP6_NF_RAW = yes; # needed for NETFILTER_XT_TARGET_CT
+        NETFILTER_XT_TARGET_CT      = yes; # needed for NF_CONNTRACK_ZONES
+        IP_NF_IPTABLES = yes;
+        IP6_NF_IPTABLES = yes;
+        # For kernelHasRPFilter
+        IP_NF_MATCH_RPFILTER = yes;
+
         # Required config for Nix
         NAMESPACES = yes;
         USER_NS = yes;
