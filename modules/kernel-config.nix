@@ -85,8 +85,23 @@ in
         NF_CONNTRACK_EVENTS         = yes;
         NF_CONNTRACK_TIMEOUT        = yes;
         NF_CONNTRACK_TIMESTAMP      = yes;
-        # FIXME: >= 4.4
-        # NETFILTER_NETLINK_GLUE_CT   = yes;
+
+        NF_TABLES = yes; # FIXME: >= 3.13
+        NF_TABLES_INET = yes; # FIXME: >= 3.14
+        NFT_REJECT = yes; # FIXME: >= 3.14
+        NETFILTER_XTABLES = yes;
+        NETFILTER_XT_MATCH_PKTTYPE = yes;
+        NFT_COMPAT = yes; # FIXME: >= 3.13
+        NETFILTER_XT_CONNMARK = yes;
+        NF_SOCKET_IPV4 = yes; # FIXME: >= 4.10
+        # NF_CONNTRACK_IPV6 = yes; < 4.19
+        NF_DEFRAG_IPV6 = yes;
+
+        NF_TABLES_NETDEV = yes; # FIXME version
+        NF_TABLES_IPV4 = yes; # FIXME version
+        NF_TABLES_ARP = yes; # FIXME version
+
+        NF_TABLES_IPV6 = yes; # FIXME version
 
         IP_NF_RAW = yes; # needed for NETFILTER_XT_TARGET_CT
         IP6_NF_RAW = yes; # needed for NETFILTER_XT_TARGET_CT
@@ -95,6 +110,29 @@ in
         IP6_NF_IPTABLES = yes;
         # For kernelHasRPFilter
         IP_NF_MATCH_RPFILTER = yes;
+
+NFT_REJECT_NETDEV     = yes;
+NF_TABLES_BRIDGE      = yes;
+
+
+#NETFILTER_INGRESS = yes; # FIXME version
+#NETFILTER_EGRESS = yes; # FIXME version
+#NETFILTER_SKIP_EGRESS = yes; # FIXME version
+#NETFILTER_FAMILY_BRIDGE = yes; # FIXME version
+#NETFILTER_FAMILY_ARP = yes; # FIXME version
+#NF_CONNTRACK_MARK = yes; # FIXME version
+#NF_CONNTRACK_SECMARK = yes; # FIXME version
+#NF_CONNTRACK_PROCFS = yes; # FIXME version
+#NF_CONNTRACK_LABELS = yes; # FIXME version
+#NF_CT_PROTO_DCCP = yes; # FIXME version
+#NF_CT_PROTO_GRE = yes; # FIXME version
+#NF_CT_PROTO_SCTP = yes; # FIXME version
+#NF_CT_PROTO_UDPLITE = yes; # FIXME version
+#NETFILTER_NETLINK_GLUE_CT = yes; # FIXME version
+#NF_NAT_REDIRECT = yes; # FIXME version
+#NF_NAT_MASQUERADE = yes; # FIXME version
+#NETFILTER_XTABLES_COMPAT = yes; # FIXME version
+
 
         # Required config for Nix
         NAMESPACES = yes;
