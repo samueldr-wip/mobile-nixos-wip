@@ -22,6 +22,10 @@ mobile-nixos.kernel-builder {
     ./0001-dts-pinephone-pro-Setup-default-on-and-panic-LEDs.patch
     ./0001-usb-dwc3-Enable-userspace-role-switch-control.patch
     (fetchpatch {
+      url = "https://gitlab.com/pine64-org/linux/-/merge_requests/33.diff";
+      sha256 = "sha256-+nM3ct3BLkLnNOygW8ynKMEZoFaL9q92lFc+gR81BxI=";
+    })
+    (fetchpatch {
       url = "https://gitlab.com/pine64-org/linux/-/merge_requests/36.patch";
       sha256 = "sha256-XUaxma/nEa19KyOum2EUhz3mL9LNlOoik6BDw90w1oc=";
     })
