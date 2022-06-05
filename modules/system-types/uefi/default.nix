@@ -3,7 +3,7 @@
 let
   enabled = config.mobile.system.type == "uefi";
 
-  inherit (lib) mkEnableOption mkIf mkOption types;
+  inherit (lib) concatStringsSep mkEnableOption mkIf mkOption types;
   inherit (pkgs.stdenv) hostPlatform;
   inherit (pkgs) imageBuilder runCommandNoCC;
   inherit (config.mobile.outputs) recovery stage-0;
@@ -37,6 +37,20 @@ let
     )
   '';
 
+  refindConfig = pkgs.writeText "${deviceName}-refind.conf" ''
+    timeout -1
+    use_nvram 0
+    default_selection "Mobile NixOS"
+    # Hide some stuff from the UI.
+    hideui banner
+    hideui hints
+    menuentry "Mobile NixOS" {
+      loader /boot/kernel
+      initrd /boot/initrd
+      options ${builtins.toJSON (concatStringsSep " " config.boot.kernelParams)}
+    }
+  '';
+
   # TODO: use generatedFilesystems
   boot-partition =
     imageBuilder.fileSystem.makeESP {
@@ -50,9 +64,13 @@ let
       size = imageBuilder.size.MiB 128;
 
       populateCommands = ''
-        mkdir -p EFI/boot
-        cp ${stage-0.mobile.outputs.uefi.efiKernel}  EFI/boot/boot${uefiPlatform}.efi
-        cp ${recovery.mobile.outputs.uefi.efiKernel} EFI/boot/recovery${uefiPlatform}.efi
+        mkdir -vp EFI/boot
+        cp -v ${pkgs.refind}/share/refind/refind_${uefiPlatform}.efi EFI/boot/boot${uefiPlatform}.efi
+        cp -v ${refindConfig} EFI/boot/refind.conf
+        mkdir -vp boot
+        cp -v ${kernelFile} boot/kernel
+        cp -v ${config.mobile.outputs.initrd} boot/initrd
+        cp -vr ${kernel}/dtbs dtb
       '';
     }
   ;
