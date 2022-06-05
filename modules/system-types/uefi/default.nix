@@ -143,6 +143,13 @@ in
           inherit disk-image;
         };
       };
+      # Minimum driver hardware requirements
+      mobile.kernel.structuredConfig = [
+        (helpers: with helpers; {
+          EFI_STUB = yes;
+          EFI = yes;
+        })
+      ];
     })
   ];
 }
