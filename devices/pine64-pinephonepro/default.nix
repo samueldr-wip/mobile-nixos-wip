@@ -30,9 +30,7 @@
     };
   };
 
-  mobile.system.type = "u-boot";
-  # By design we're not adding a U-Boot package.
-  # We're starting to dogfood using Tow-Boot.
+  mobile.system.type = "uefi";
 
   mobile.device.firmware = pkgs.callPackage ./firmware {};
   mobile.boot.stage-1.firmware = [
