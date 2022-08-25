@@ -55,6 +55,12 @@ in
         # While not *universally available*, it's universally required to
         # be turned off.
         ANDROID_PARANOID_NETWORK = no;
+
+        #CMDLINE_FORCE = no;
+      })
+      # Helpful
+      (helpers: with helpers; {
+        LOCALVERSION = freeform ''""'';
       })
       # Needed for systemd
       (helpers: with helpers; {
