@@ -221,7 +221,7 @@ stdenv.mkDerivation (inputArgs // {
   patches =
     map (p: p.patch) kernelPatches
     # Required for deterministic builds along with some postPatch magic.
-    ++ optional (lib.versionAtLeast version "4.13") (nixosKernelPath + "/randstruct-provide-seed.patch")
+    ++ optional ((lib.versionAtLeast version "4.13" && lib.versionOlder version "4.19")) (nixosKernelPath + "/randstruct-provide-seed.patch")
     ++ patches
   ;
 
