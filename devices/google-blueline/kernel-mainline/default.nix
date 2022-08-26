@@ -1,24 +1,33 @@
 { mobile-nixos
 , fetchFromGitHub
+, fetchFromGitLab
 , ...
 }:
 
 mobile-nixos.kernel-builder rec {
-  version = "5.17.0-rc1";
+  version = "5.19.0";
   configfile = ./config.aarch64;
 
-  # Exact copy of:
-  #  - https://git.linaro.org/people/vinod.koul/kernel.git/log/?h=topic/gsi7-pixel
-  #  - https://git.linaro.org/people/vinod.koul/kernel.git/commit/?h=topic/gsi7-pixel&id=d5ca4c5de8b28496ad565c91e974d8b2448bc80b
-  src = fetchFromGitHub {
-    owner = "samueldr";
+  # # Exact copy of:
+  # #  - https://git.linaro.org/people/vinod.koul/kernel.git/log/?h=topic/gsi7-pixel
+  # #  - https://git.linaro.org/people/vinod.koul/kernel.git/commit/?h=topic/gsi7-pixel&id=d5ca4c5de8b28496ad565c91e974d8b2448bc80b
+  # src = fetchFromGitHub {
+  #   owner = "samueldr";
+  #   repo = "linux";
+  #   rev = "d5ca4c5de8b28496ad565c91e974d8b2448bc80b";
+  #   hash = "sha256-f8uoOV1+HYGZeTYiM48ydHtikbiAqsjURJvH1smo16o=";
+  # };
+
+  src = fetchFromGitLab {
+    owner = "sdm845-mainline";
     repo = "linux";
-    rev = "d5ca4c5de8b28496ad565c91e974d8b2448bc80b";
-    hash = "sha256-f8uoOV1+HYGZeTYiM48ydHtikbiAqsjURJvH1smo16o=";
+    rev = "488fa1706643d6f2208531d7b04b052b0841df00"; # XXX caleb/pixel3-bringup-5.19 DO NOT SHIP
+    hash = "sha256-OlcWyDeYgWKrVX5JD9qEXfujNGqsAa9UZSjQjiAkQb4=";
   };
 
   patches = [
-    ./0001-HACK-Add-back-TEXT_OFFSET-in-the-built-image.patch
+    # Present in sd845-mainline WIP bringup branch already
+    # ./0001-HACK-Add-back-TEXT_OFFSET-in-the-built-image.patch
   ];
 
   # TODO: generic mainline build; append per-device...
@@ -33,7 +42,7 @@ mobile-nixos.kernel-builder rec {
     (PS4=" $ "; set -x
     cat \
       $buildRoot/arch/arm64/boot/Image.${isCompressed} \
-      $buildRoot/arch/arm64/boot/dts/qcom/sdm845-blueline.dtb \
+      $buildRoot/arch/arm64/boot/dts/qcom/sdm845-google-blueline.dtb \
       > $out/Image.${isCompressed}-dtb
     )
   '';
