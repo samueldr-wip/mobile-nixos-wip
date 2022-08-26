@@ -1,4 +1,5 @@
 { runCommandNoCC
+, fetchFromGitLab
 , firmwareLinuxNonfree
 , wireless-regdb
 , vendor-firmware-files
@@ -7,39 +8,24 @@
 # The minimum set of firmware files required for the device.
 runCommandNoCC "google-blueline-firmware" {
   src = firmwareLinuxNonfree;
+  sdm845_mainline = fetchFromGitLab {
+    owner = "sdm845-mainline";
+    repo = "firmware-google-pixel3";
+    rev = "7deb5f8e0b0499a80ea85dfc7941351c77e7738c"; # main
+    hash = "sha256-eb4hI/mMA7BqcH2YVcIgZ+IpdljWo7/dnq0rqXam0jQ=";
+  };
 } ''
-  # Firmware from the vendor image
-  mkdir -p $out/lib/firmware/qcom/sdm845/blueline
+  mkdir -p $out/lib/firmware
 
-  find ${vendor-firmware-files}
-
-  cp -vt $out/lib/firmware/qcom/sdm845/blueline ${vendor-firmware-files}/lib/firmware/*adsp*
-  cp -vt $out/lib/firmware/qcom/sdm845/blueline ${vendor-firmware-files}/lib/firmware/*cdsp*
-
-  # GPU (mainly)
-  cp -vt $out/lib/firmware/qcom/sdm845/blueline ${vendor-firmware-files}/lib/firmware/*a630*
-
-  # Modem stuff
-  cp -vt $out/lib/firmware/qcom/sdm845/blueline ${vendor-firmware-files}/lib/firmware/*mba*
-  cp -vt $out/lib/firmware/qcom/sdm845/blueline ${vendor-firmware-files}/lib/firmware/*modem*
-
-  # Touch panel
-  cp -vt $out/lib/firmware/ ${vendor-firmware-files}/lib/firmware/ftm5*.ftb
+  cp -vrf -t $out/lib/firmware $sdm845_mainline/lib/firmware/*
+  chmod -R +w $out/lib/firmware
 
   (
-    cd $out/lib/firmware/qcom
-    for f in sdm845/blueline/*; do
-     ln -sf $f
-    done
+    cd $out/lib/firmware
+    mv -t ./     postmarketos/ath10k
+    mv -t ./qca/ postmarketos/qca/*
   )
 
   # Firmware we can get from upstream
-  for firmware in \
-    qca/crbtfw21.tlv \
-    qca/crnv21.bin \
-  ; do
-    mkdir -p "$(dirname $out/lib/firmware/$firmware)"
-    cp -vrf "$src/lib/firmware/$firmware" $out/lib/firmware/$firmware
-  done
   cp -vt $out/lib/firmware ${wireless-regdb}/lib/firmware/regulatory.db*
 ''
