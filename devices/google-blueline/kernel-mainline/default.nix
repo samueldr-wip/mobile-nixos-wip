@@ -8,16 +8,6 @@ mobile-nixos.kernel-builder rec {
   version = "5.19.0";
   configfile = ./config.aarch64;
 
-  # # Exact copy of:
-  # #  - https://git.linaro.org/people/vinod.koul/kernel.git/log/?h=topic/gsi7-pixel
-  # #  - https://git.linaro.org/people/vinod.koul/kernel.git/commit/?h=topic/gsi7-pixel&id=d5ca4c5de8b28496ad565c91e974d8b2448bc80b
-  # src = fetchFromGitHub {
-  #   owner = "samueldr";
-  #   repo = "linux";
-  #   rev = "d5ca4c5de8b28496ad565c91e974d8b2448bc80b";
-  #   hash = "sha256-f8uoOV1+HYGZeTYiM48ydHtikbiAqsjURJvH1smo16o=";
-  # };
-
   src = fetchFromGitLab {
     owner = "sdm845-mainline";
     repo = "linux";
