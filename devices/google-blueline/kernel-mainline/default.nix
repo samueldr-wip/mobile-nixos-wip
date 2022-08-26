@@ -18,6 +18,7 @@ mobile-nixos.kernel-builder rec {
   patches = [
     # Present in sd845-mainline WIP bringup branch already
     # ./0001-HACK-Add-back-TEXT_OFFSET-in-the-built-image.patch
+    ./0001-touchscreen-focaltech_fts-Add-missing-include.patch
   ];
 
   # TODO: generic mainline build; append per-device...
