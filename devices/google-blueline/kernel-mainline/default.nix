@@ -21,8 +21,8 @@ mobile-nixos.kernel-builder rec {
   src = fetchFromGitLab {
     owner = "sdm845-mainline";
     repo = "linux";
-    rev = "488fa1706643d6f2208531d7b04b052b0841df00"; # XXX caleb/pixel3-bringup-5.19 DO NOT SHIP
-    hash = "sha256-OlcWyDeYgWKrVX5JD9qEXfujNGqsAa9UZSjQjiAkQb4=";
+    rev = "20795113b74df511fd599d3867a6bd1a5b0f9c48"; # XXX caleb/pixel3-bringup-5.19 DO NOT SHIP
+    hash = "sha256-rPvDe+xgClToIvKKbhC1y/fxeZnD+carx8zYy5KdsJ0=";
   };
 
   patches = [
