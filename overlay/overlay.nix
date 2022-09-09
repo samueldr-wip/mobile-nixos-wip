@@ -105,6 +105,8 @@ in
       ];
     });
 
+    # FIXME: pd-mapper reads from the firmware directory.
+    compressFirmwareXz = super.lib.id;
 
     # Things specific to mobile-nixos.
     # Not necessarily internals, but they probably won't go into <nixpkgs>.
