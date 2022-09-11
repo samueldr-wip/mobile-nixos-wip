@@ -47,9 +47,9 @@
   ];
 
   boot.kernelParams = [
-    # ??? required or it won't boot for now ???
-    "console=ttyMSM0,115200n8"
     "console=tty0"
+    # XXX required to be last or display fails (?!)
+    "console=ttyMSM0,115200n8"
   ];
 
   mobile.system.type = "android";
