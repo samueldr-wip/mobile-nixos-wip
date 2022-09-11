@@ -47,9 +47,9 @@
   ];
 
   boot.kernelParams = [
-    # Extracted from an Android boot image
+    # ??? required or it won't boot for now ???
     "console=ttyMSM0,115200n8"
-    "printk.devkmsg=on"
+    "console=tty0"
   ];
 
   mobile.system.type = "android";
