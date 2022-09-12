@@ -21,12 +21,10 @@
 
   mobile.boot.stage-1 = {
     compression = "xz";
-    kernel.package = pkgs.callPackage ./kernel-mainline { };
+    kernel.package = pkgs.callPackage ./kernel { };
   };
 
-  mobile.device.firmware = pkgs.callPackage ./firmware-mainline {
-    vendor-firmware-files = pkgs.callPackage ./firmware-vendor { };
-  };
+  mobile.device.firmware = pkgs.callPackage ./firmware {};
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = lib.mkBefore [ config.mobile.device.firmware ];
   mobile.boot.stage-1.firmware = [

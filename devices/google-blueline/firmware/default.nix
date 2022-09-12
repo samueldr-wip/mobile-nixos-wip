@@ -2,10 +2,8 @@
 , fetchFromGitLab
 , firmwareLinuxNonfree
 , wireless-regdb
-, vendor-firmware-files
 }:
 
-# The minimum set of firmware files required for the device.
 runCommandNoCC "google-blueline-firmware" {
   src = firmwareLinuxNonfree;
   sdm845_mainline = fetchFromGitLab {
