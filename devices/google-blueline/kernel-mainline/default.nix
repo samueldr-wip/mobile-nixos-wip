@@ -19,6 +19,7 @@ mobile-nixos.kernel-builder rec {
     # Present in sd845-mainline WIP bringup branch already
     # ./0001-HACK-Add-back-TEXT_OFFSET-in-the-built-image.patch
     ./0001-touchscreen-focaltech_fts-Add-missing-include.patch
+    ./0001-XXX-google-blueline-sync-dts-with-9060b7256952a63311.patch
   ];
 
   # TODO: generic mainline build; append per-device...
