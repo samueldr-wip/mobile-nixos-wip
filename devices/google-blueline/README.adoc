@@ -18,3 +18,14 @@ For the time being, customizing the kernel command-line requires editing the
 ```
 
 > if you do `fastboot oem uart help` it gives you the usage
+
+
+=== Tips
+
+==== `fastboot boot`
+
+Using `fastboot boot` may fail if the current slot is in a failed state.
+
+With the latest platform firmware available (RQ3A) boot counting starts at `0`,
+which means that a single reboot without marking the slot as successful will
+mark the slot as failed.
