@@ -1,0 +1,71 @@
+{ config, lib, pkgs, ... }:
+
+{
+  imports = [
+    ./sound.nix
+  ];
+
+  mobile.hardware = {
+    soc = "qualcomm-sdm845";
+  };
+
+  mobile.boot.stage-1 = {
+    compression = "xz";
+    kernel.package = pkgs.mobile-nixos.kernel-append-dtbs {
+      kernel = (pkgs.callPackage ./kernel { });
+      # Automatically guesses at the dtb file name.
+      # NOTE: if at some point the `mobile.device.name` name does not point to
+      #       the correct dtb file name, *add a new module option*.
+      #       Also add a new module option for more complex behaviours.
+      dtbs = [
+        "dtbs/qcom/sdm845-${config.mobile.device.name}.dtb"
+      ];
+    };
+  };
+
+  hardware.enableRedistributableFirmware = true;
+  hardware.firmware = lib.mkBefore [ config.mobile.device.firmware ];
+
+  # Note: on devices it's highly likely no firmware is required during stage-1.
+  # DRM *should* work fine without firmware.
+  # Modems and such will pick them back up in stage-2.
+  # Putting the firmwares in stage-1 *may* cause trouble with the image
+  # becoming too big.
+  mobile.boot.stage-1.firmware = [];
+
+  mobile.system.type = "android";
+  mobile.system.android = {
+    # Assumed all SDM845 devices use A/B
+    ab_partitions = lib.mkDefault true;
+    # Assumed all SDM845 devices can boot with the same options.
+    bootimg.flash = {
+      offset_base = "0x00000000";
+      offset_kernel = "0x00008000";
+      offset_ramdisk = "0x01000000";
+      offset_second = "0x00000000";
+      offset_tags = "0x00000100";
+      pagesize = "4096";
+    };
+  };
+
+  boot.kernelParams = [
+    "console=tty0"
+  ];
+
+  mobile.usb.mode = "gadgetfs";
+  # The identifiers used here serve as a compatible well-known identifier.
+  mobile.usb.idVendor = lib.mkDefault "18D1"; # Google
+  mobile.usb.idProduct = lib.mkDefault "D001"; # "Nexus 4"
+
+  mobile.usb.gadgetfs.functions = {
+    adb = "ffs.adb";
+    mass_storage = "mass_storage.0";
+    rndis = "rndis.usb0";
+  };
+
+  mobile.quirks.qualcomm.sdm845-modem.enable = true;
+
+  services.udev.extraRules = ''
+    SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_INPUT}=="1", SUBSYSTEMS=="input", ATTRS{name}=="pmi8998_haptics", TAG+="uaccess", ENV{FEEDBACKD_TYPE}="vibra"
+  '';
+}
