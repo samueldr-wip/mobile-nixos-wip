@@ -18,6 +18,12 @@
     };
   };
 
+  # Uses a custom kernel for now; not yet in proper sdm845-mainline.
+  mobile.boot.stage-1.kernel.package = lib.mkForce (pkgs.mobile-nixos.kernel-append-dtbs {
+    kernel = (pkgs.callPackage ./kernel { });
+    dtbs = [ "dtbs/qcom/sdm845-${config.mobile.device.name}.dtb" ];
+  });
+
   mobile.device.firmware = pkgs.callPackage ./firmware {};
 
   mobile.system.android = {
