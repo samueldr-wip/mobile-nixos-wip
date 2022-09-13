@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ../oneplus-enchilada/sound.nix
+    ../families/sdm845-mainline
   ];
 
   mobile.device.name = "google-blueline";
@@ -12,67 +12,29 @@
   };
 
   mobile.hardware = {
-    soc = "qualcomm-sdm845";
     ram = 1024 * 4;
     screen = {
       width = 1080; height = 2160;
     };
   };
 
-  mobile.boot.stage-1 = {
-    compression = "xz";
-    kernel.package = pkgs.callPackage ./kernel { };
-  };
+  # Uses a custom kernel for now; not yet in proper sdm845-mainline.
+  mobile.boot.stage-1.kernel.package = lib.mkForce (pkgs.mobile-nixos.kernel-append-dtbs {
+    kernel = (pkgs.callPackage ./kernel { });
+    dtbs = [ "dtbs/qcom/sdm845-${config.mobile.device.name}.dtb" ];
+  });
 
   mobile.device.firmware = pkgs.callPackage ./firmware {};
-  hardware.enableRedistributableFirmware = true;
-  hardware.firmware = lib.mkBefore [ config.mobile.device.firmware ];
-  mobile.boot.stage-1.firmware = [
-    # NOTE: putting the full firmware files here risks making the initramfs
-    # too big, which is known to break boot.
-    # Having the firmware files only in the built system is sufficient.
-    # config.mobile.device.firmware
-  ];
 
-  mobile.system.android.device_name = "blueline";
   mobile.system.android = {
-    # This device has an A/B partition scheme.
-    # NOTE: while A/B, we cannot rely on anything else than `boot` as this
-    #       device uses dynamic partitions.
-    ab_partitions = true;
+    device_name = "blueline";
+    # Not boot as recovery. (Will not provide skip_initramfs on normal boots.)
     boot_as_recovery = false;
-
-    bootimg.flash = {
-      offset_base = "0x00000000";
-      offset_kernel = "0x00008000";
-      offset_ramdisk = "0x01000000";
-      offset_second = "0x00000000";
-      offset_tags = "0x00000100";
-      pagesize = "4096";
-    };
   };
 
-  boot.kernelParams = [
-    "console=tty0"
-    # XXX required to be last or display fails (?!)
+  boot.kernelParams = lib.mkAfter [
+    # If this is not present, the system will fail to boot reliably.
+    # TODO: investigate if this is true when UART is not enabled in fastboot.
     "console=ttyMSM0,115200n8"
   ];
-
-  mobile.usb.mode = "gadgetfs";
-  # Google
-  mobile.usb.idVendor = "18D1";
-  # "Nexus 4"
-  mobile.usb.idProduct = "D001";
-
-  mobile.system.type = "android";
-
-
-  mobile.usb.gadgetfs.functions = {
-    adb = "ffs.adb";
-    rndis = "rndis.usb0";
-  };
-
-  mobile.quirks.qualcomm.sdm845-modem.enable = true;
-
-  mobile.system.android.system_partition_destination = "userdata";
 }
