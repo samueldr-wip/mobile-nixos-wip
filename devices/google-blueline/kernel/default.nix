@@ -22,24 +22,6 @@ mobile-nixos.kernel-builder rec {
     ./0001-XXX-google-blueline-sync-dts-with-9060b7256952a63311.patch
   ];
 
-  # TODO: generic mainline build; append per-device...
-  postInstall = ''
-    echo ':: Copying kernel'
-    (PS4=" $ "; set -x
-    cp -v \
-      $buildRoot/arch/arm64/boot/Image.${isCompressed} \
-      $out/
-    )
-    echo ':: Appending DTB'
-    (PS4=" $ "; set -x
-    cat \
-      $buildRoot/arch/arm64/boot/Image.${isCompressed} \
-      $buildRoot/arch/arm64/boot/dts/qcom/sdm845-google-blueline.dtb \
-      > $out/Image.${isCompressed}-dtb
-    )
-  '';
-
   isModular = false;
   isCompressed = "gz";
-  kernelFile = "Image.${isCompressed}-dtb";
 }
