@@ -125,6 +125,8 @@ in
         stdenv = with self; overrideCC stdenv buildPackages.clang_9;
       };
 
+      kernel-append-dtbs = callPackage ./mobile-nixos/kernel-append-dtbs { };
+
       stage-1 = {
         script-loader = callPackage ../boot/script-loader {};
         boot-recovery-menu = callPackage ../boot/recovery-menu {};
