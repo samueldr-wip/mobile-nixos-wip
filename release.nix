@@ -187,20 +187,20 @@ rec {
   # They may or may not work as-they-are on devices. YMMV.
   examples = {
     hello = {
-      x86_64-linux.rootfs  = (evalExample { example = ./examples/hello; system = "x86_64-linux"; }).outputs.rootfs;
-      aarch64-linux.rootfs = (evalExample { example = ./examples/hello; system = "aarch64-linux"; }).outputs.rootfs;
-      cross-x86-aarch64.rootfs = (evalExample { example = ./examples/hello; system = "x86_64-linux"; targetSystem = "aarch64-linux"; }).outputs.rootfs;
-      cross-x86-armv7l.rootfs  = (evalExample { example = ./examples/hello; system = "x86_64-linux"; targetSystem = "armv7l-linux";  }).outputs.rootfs;
+      x86_64-linux.toplevel  = (evalExample { example = ./examples/hello; system = "x86_64-linux"; }).outputs.toplevel;
+      aarch64-linux.toplevel = (evalExample { example = ./examples/hello; system = "aarch64-linux"; }).outputs.toplevel;
+      cross-x86-aarch64.toplevel = (evalExample { example = ./examples/hello; system = "x86_64-linux"; targetSystem = "aarch64-linux"; }).outputs.toplevel;
+      cross-x86-armv7l.toplevel  = (evalExample { example = ./examples/hello; system = "x86_64-linux"; targetSystem = "armv7l-linux";  }).outputs.toplevel;
     };
     phosh = {
-      x86_64-linux.rootfs  = (evalExample { example = ./examples/phosh; system = "x86_64-linux"; }).outputs.rootfs;
-      aarch64-linux.rootfs = (evalExample { example = ./examples/phosh; system = "aarch64-linux"; }).outputs.rootfs;
-      cross-x86-aarch64.rootfs = (evalExample { example = ./examples/phosh; system = "x86_64-linux"; targetSystem = "aarch64-linux"; }).outputs.rootfs;
+      x86_64-linux.toplevel  = (evalExample { example = ./examples/phosh; system = "x86_64-linux"; }).outputs.toplevel;
+      aarch64-linux.toplevel = (evalExample { example = ./examples/phosh; system = "aarch64-linux"; }).outputs.toplevel;
+      cross-x86-aarch64.toplevel = (evalExample { example = ./examples/phosh; system = "x86_64-linux"; targetSystem = "aarch64-linux"; }).outputs.toplevel;
     };
     plasma-mobile = {
-      x86_64-linux.rootfs  = (evalExample { example = ./examples/plasma-mobile; system = "x86_64-linux"; }).outputs.rootfs;
-      aarch64-linux.rootfs = (evalExample { example = ./examples/plasma-mobile; system = "aarch64-linux"; }).outputs.rootfs;
-      cross-x86-aarch64.rootfs = (evalExample { example = ./examples/plasma-mobile; system = "x86_64-linux"; targetSystem = "aarch64-linux"; }).outputs.rootfs;
+      x86_64-linux.toplevel  = (evalExample { example = ./examples/plasma-mobile; system = "x86_64-linux"; }).outputs.toplevel;
+      aarch64-linux.toplevel = (evalExample { example = ./examples/plasma-mobile; system = "aarch64-linux"; }).outputs.toplevel;
+      cross-x86-aarch64.toplevel = (evalExample { example = ./examples/plasma-mobile; system = "x86_64-linux"; targetSystem = "aarch64-linux"; }).outputs.toplevel;
     };
   };
 
