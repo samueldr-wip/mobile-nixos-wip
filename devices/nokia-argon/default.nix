@@ -15,17 +15,28 @@
     };
   };
 
+  boot.kernelParams = [
+    # TODO: option to enable serial console.
+    "earlycon"
+    "console=ttyMSM0,115200"
+  ];
+
   mobile.boot.stage-1 = {
     kernel.package = pkgs.callPackage ./kernel { };
+    kernel.additionalModules = [
+      "pm8916-lbc"
+      "pm8916-bms-vm"
+      "panel-mipi-dbi"
+    ];
   };
 
   mobile.system.android.bootimg = {
     flash = {
       offset_base = "0x80000000";
       offset_kernel = "0x00008000";
-      offset_ramdisk = "0x01000000";
+      offset_ramdisk = "0x02700000";
       offset_second = "0x00f00000";
-      offset_tags = "0x00000100";
+      offset_tags = "0x02500000";
       pagesize = "2048";
     };
   };
@@ -33,14 +44,25 @@
     "dtbs/qcom-msm8905-nokia-argon.dtb"
   ];
 
-  mobile.usb.mode = "android_usb";
+  mobile.usb.mode = "gadgetfs";
   # ID used in fastboot... not actually "correct"
   mobile.usb.idVendor = "18d1";
   mobile.usb.idProduct = "d00d";
 
+  mobile.usb.gadgetfs.functions = {
+    adb = "ffs.adb";
+    mass_storage = "mass_storage.0";
+    rndis = "rndis.usb0";
+  };
+
   mobile.system.type = "android";
 
   mobile.boot.stage-1.compression = lib.mkDefault "xz";
+
+  mobile.device.firmware = pkgs.callPackage ./firmware {};
+  mobile.boot.stage-1.firmware = [
+    config.mobile.device.firmware
+  ];
 
   mobile.kernel.structuredConfig = [
     (helpers: with helpers; {
@@ -48,4 +70,8 @@
       FW_LOADER_USER_HELPER = lib.mkForce yes;
     })
   ];
+
+  nixpkgs.overlays = [(final: super: {
+    #nokia-argon-unredistributable-firmware = final.callPackage ./firmware/non-redistributable.nix {};
+  })];
 }
