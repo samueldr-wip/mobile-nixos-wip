@@ -29,6 +29,9 @@
       pagesize = "2048";
     };
   };
+  mobile.system.android.appendDTB = [
+    "dtbs/qcom-msm8905-nokia-argon.dtb"
+  ];
 
   mobile.usb.mode = "android_usb";
   # ID used in fastboot... not actually "correct"
