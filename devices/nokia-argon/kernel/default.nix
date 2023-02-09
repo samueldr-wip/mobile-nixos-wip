@@ -3,25 +3,17 @@
 , ...
 }:
 
-mobile-nixos.kernel-builder-gcc49 {
-  version = "3.10.49";
+mobile-nixos.kernel-builder {
+  version = "6.1.0";
   configfile = ./config.armv7;
 
   src = fetchFromGitHub {
-    owner = "mobile-nixos";
+    owner = "msm8916-mainline";
     repo = "linux";
-    rev = "0e0a84ad0cb457c04f7810b86710982cbc5a4629"; # nokia-argon/LF.BR.1.2.9-19300-8x09.0+mobile-nixos
-    sha256 = "sha256-ju3ioY+JvLA5QpSMG7rNe8mQvM/dLxHxsfPv8LoNRWo=";
+    rev = "refs/tags/v6.1-msm8916";
+    sha256 = "sha256-mdtFW6B0mC2XS9UuYqD+5u+mix+zWCVWX8UFBp4/EH4=";
   };
 
-  makeFlags = [
-    "TARGET_PRODUCT=argon"
-  ];
-
   isModular = false;
-  isQcdt = true;
-  qcdt_dtbs = "arch/arm/boot/";
-
-  # Things are seemingly wrong in that kernel build with parallelization...
-  enableParallelBuilding = false;
+  isCompressed = false;
 }
