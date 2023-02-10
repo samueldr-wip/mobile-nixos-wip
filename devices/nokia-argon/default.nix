@@ -23,11 +23,6 @@
 
   mobile.boot.stage-1 = {
     kernel.package = pkgs.callPackage ./kernel { };
-    kernel.additionalModules = [
-      "pm8916-lbc"
-      "pm8916-bms-vm"
-      "panel-mipi-dbi"
-    ];
   };
 
   mobile.system.android.bootimg = {
