@@ -11,9 +11,16 @@ mobile-nixos.kernel-builder {
   src = fetchFromGitLab {
     owner = "bananian";
     repo = "msm8909-mainline";
-    rev = "8b819007b2d9840a3f0bbd98bc67380bf0f54ef9"; # https://gitlab.com/postmarketOS/pmaports/-/merge_requests/3527/diffs#60bd6e5f3730b7c9345651b3885b9233486351d7_0_28
+    # https://gitlab.com/postmarketOS/pmaports/-/merge_requests/3527/diffs#60bd6e5f3730b7c9345651b3885b9233486351d7_0_28
+    # Part of the `6.0` branch https://gitlab.com/bananian/msm8909-mainline/-/commits/6.0
+    rev = "8b819007b2d9840a3f0bbd98bc67380bf0f54ef9";
     sha256 = "sha256-6J6K2GYjzty1hkSBOSp566o2vSn115Ww6Nq1kb6uGDM=";
   };
+
+  patches = [
+    # Backport to be forward compatible.
+    ./0001-TEMP-nokia-argon-Backport-input-from-msm8916-mainlin.patch
+  ];
 
   # XXX broken
   # 6.0.0-rc7 from bananian works, based off the same (normalized) config.
