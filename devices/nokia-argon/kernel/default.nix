@@ -14,6 +14,6 @@ mobile-nixos.kernel-builder {
     sha256 = "sha256-mdtFW6B0mC2XS9UuYqD+5u+mix+zWCVWX8UFBp4/EH4=";
   };
 
-  isModular = false;
+  isModular = true;
   isCompressed = false;
 }
