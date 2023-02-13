@@ -178,11 +178,23 @@ module System
     args << source
     args << dest
 
-    # The kernel module for the filesystem may need to be probed.
-    begin
-      System.run("modprobe", type)
-    rescue System::CommandError
-      $logger.warn("Kernel filesystem module “#{type}” failed to load.")
+    # XXX only modprobe on modular kernels
+    if true then
+      # The kernel module for the filesystem may need to be probed.
+      begin
+        System.run("modprobe", type)
+      rescue System::CommandError
+        $logger.warn("Kernel filesystem module “#{type}” failed to load.")
+      end
+
+      # Loop mount requires a module.
+      if options and options.include?("loop") then
+        begin
+          System.run("modprobe", "loop")
+        rescue System::CommandError
+          $logger.warn("Kernel module for loop devices failed to load.")
+        end
+      end
     end
 
     # We may have some mountpoints already mounted from, e.g. early logging in
