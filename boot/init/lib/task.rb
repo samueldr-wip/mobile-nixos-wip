@@ -1,7 +1,7 @@
 # Namespace where tasks can be defined, and hosting methods harmonizing a run.
 module Tasks
   HUNG_BOOT_NOTIFICATION = 3 # seconds
-  HUNG_BOOT_TIMEOUT = 60 # seconds
+  HUNG_BOOT_TIMEOUT = 10 # seconds
 
   # Register a singleton task to be instantiated and ran.
   # @internal
