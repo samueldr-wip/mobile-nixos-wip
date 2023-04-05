@@ -1,7 +1,8 @@
 { config, pkgs, lib, utils, ... }:
 
 let
-  udev = pkgs.systemdMinimal;
+  # XXX https://github.com/NixOS/nixpkgs/pull/224421
+  udev = pkgs.systemd;
   inherit (pkgs)
     busybox
     makeInitrd
