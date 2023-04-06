@@ -1,0 +1,29 @@
+From 030715e551516fe9e5898ff60fd1a58f76a49ae6 Mon Sep 17 00:00:00 2001
+From: Samuel Dionne-Riel <samuel@dionne-riel.com>
+Date: Wed, 5 Apr 2023 21:33:34 -0400
+Subject: [PATCH] [HACK] don't reflect EBC output
+
+The touch panel won't match, at this point in time.
+
+I'll have to investigate and see what the actual consequences of this
+are.
+---
+ drivers/gpu/drm/rockchip/rockchip_ebc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/rockchip/rockchip_ebc.c b/drivers/gpu/drm/rockchip/rockchip_ebc.c
+index a0573b25e6ac1..b8450a487ec3c 100644
+--- a/drivers/gpu/drm/rockchip/rockchip_ebc.c
++++ b/drivers/gpu/drm/rockchip/rockchip_ebc.c
+@@ -191,7 +191,7 @@ static bool direct_mode = false;
+ module_param(direct_mode, bool, 0444);
+ MODULE_PARM_DESC(direct_mode, "compute waveforms in software (software LUT)");
+ 
+-static bool panel_reflection = true;
++static bool panel_reflection = false;
+ module_param(panel_reflection, bool, 0644);
+ MODULE_PARM_DESC(panel_reflection, "reflect the image horizontally");
+ 
+-- 
+2.38.0
+

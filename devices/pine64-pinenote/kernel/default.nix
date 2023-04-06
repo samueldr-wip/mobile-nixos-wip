@@ -16,6 +16,10 @@ mobile-nixos.kernel-builder {
     hash = "sha256-Sq4uPXKJX9KdZ2P6JXl/Vu6DPY3h8GsUEpE5BpGFr2s=";
   };
 
+  patches = [
+    ./0001-HACK-don-t-reflect-EBC-output.patch
+  ];
+
   postInstall = ''
     echo ":: Installing selected DTBs"
     # The DTB install copied a bunch of DTBs, we don't need them
