@@ -1,0 +1,40 @@
+From 27180a6625aa2f0fd222b2774447f87c71bb0fd2 Mon Sep 17 00:00:00 2001
+From: Samuel Dionne-Riel <samuel@dionne-riel.com>
+Date: Thu, 6 Apr 2023 16:35:11 -0400
+Subject: [PATCH] [HACK] Disable clm_blob loading in brcmfmac
+
+Unknown why, unexplored why, but uploading it fails on resume.
+
+```
+Apr 06 16:30:53 keggy kernel: brcmfmac: brcmf_wcc_attach: executing
+Apr 06 16:30:53 keggy kernel: ieee80211 phy1: brcmf_c_process_clm_blob: clmload (2676 byte file) failed (-52)
+Apr 06 16:30:53 keggy kernel: ieee80211 phy1: brcmf_c_preinit_dcmds: download CLM blob file failed, -5
+Apr 06 16:30:53 keggy kernel: ieee80211 phy1: brcmf_bus_started: failed: -5
+Apr 06 16:30:53 keggy kernel: ieee80211 phy1: brcmf_attach: dongle is not responding: err=-5
+Apr 06 16:30:53 keggy kernel: brcmfmac: brcmf_wcc_detach: executing
+Apr 06 16:30:53 keggy kernel: brcmfmac: brcmf_sdio_firmware_callback: brcmf_attach failed
+```
+
+Note that with my particular setup, the `clm_blob` is not uploaded in
+initial probe. It might be that it is required to re-upload the exact
+same things that were before suspend/resume.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 6b38d9de71af6..a4de0abc1dead 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4421,7 +4421,7 @@ brcmf_sdio_prepare_fw_request(struct brcmf_sdio *bus)
+ 	struct brcmf_fw_name fwnames[] = {
+ 		{ ".bin", bus->sdiodev->fw_name },
+ 		{ ".txt", bus->sdiodev->nvram_name },
+-		{ ".clm_blob", bus->sdiodev->clm_name },
++		{ ".clm_blob_DISABLED_HACK", bus->sdiodev->clm_name },
+ 	};
+ 
+ 	fwreq = brcmf_fw_alloc_request(bus->ci->chip, bus->ci->chiprev,
+-- 
+2.38.0
+

@@ -19,6 +19,7 @@ mobile-nixos.kernel-builder {
   patches = [
     ./0001-HACK-don-t-reflect-EBC-output.patch
     ./0001-mfd-rk808-Fix-power-key-polarity.patch
+    ./0001-HACK-Disable-clm_blob-loading-in-brcmfmac.patch
   ];
 
   postInstall = ''
