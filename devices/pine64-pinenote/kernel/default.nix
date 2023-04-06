@@ -18,6 +18,7 @@ mobile-nixos.kernel-builder {
 
   patches = [
     ./0001-HACK-don-t-reflect-EBC-output.patch
+    ./0001-mfd-rk808-Fix-power-key-polarity.patch
   ];
 
   postInstall = ''
