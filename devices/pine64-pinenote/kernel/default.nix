@@ -21,6 +21,7 @@ mobile-nixos.kernel-builder {
     ./0001-mfd-rk808-Fix-power-key-polarity.patch
     ./0001-HACK-Disable-clm_blob-loading-in-brcmfmac.patch
     ./0001-WIP-pinenote-Declare-panel-orientation.patch
+    ./0001-WORKAROUND-Use-SW_LID-for-better-logind-integration.patch
   ];
 
   postInstall = ''

@@ -1,0 +1,25 @@
+From 3a770c468dfa59bd3459e3925b3f36742bbcf08f Mon Sep 17 00:00:00 2001
+From: Samuel Dionne-Riel <samuel@dionne-riel.com>
+Date: Tue, 18 Apr 2023 21:24:35 -0400
+Subject: [PATCH] [WORKAROUND] Use SW_LID for better logind integration
+
+---
+ arch/arm64/boot/dts/rockchip/rk3566-pinenote.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3566-pinenote.dtsi b/arch/arm64/boot/dts/rockchip/rk3566-pinenote.dtsi
+index 52b854483bcaa..410716aef2e2b 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3566-pinenote.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3566-pinenote.dtsi
+@@ -100,7 +100,7 @@ switch-cover {
+ 			label = "cover";
+ 			gpios = <&gpio0 RK_PC7 GPIO_ACTIVE_LOW>;
+ 			linux,input-type = <EV_SW>;
+-			linux,code = <SW_MACHINE_COVER>;
++			linux,code = <SW_LID>;
+ 			linux,can-disable;
+ 			wakeup-event-action = <EV_ACT_DEASSERTED>;
+ 			wakeup-source;
+-- 
+2.38.0
+
