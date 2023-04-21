@@ -96,7 +96,7 @@ makeFilesystem (args // {
     echo "Computing inode count..."
     inodes=$(find . ! -type d -print0 | du --files0-from=- --inodes | cut -f1 | sum-lines)
     echo "    Min inodes: $inodes" 1>&2
-    inodes=$(( inodes * 2 ))
+    inodes=$(( inodes * 4 ))
     echo "    Inodes reserved: $inodes" 1>&2
     echo ""
 
