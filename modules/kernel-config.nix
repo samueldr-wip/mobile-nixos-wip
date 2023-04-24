@@ -90,6 +90,15 @@ in
         BLK_DEV_BSG = yes;
         DEVPTS_MULTIPLE_INSTANCES = whenOlder "4.7" yes;
       })
+      # Needed for logo at boot
+      (helpers: with helpers; {
+        # FIXME: do we actually want to force this?
+        # Should we have a "mainline-based" flag for this?
+        # Any other flag that could be better even?
+        LOGO = yes;
+        FRAMEBUFFER_CONSOLE = yes;
+        FRAMEBUFFER_CONSOLE_DEFERRED_TAKEOVER = whenAtLeast "4.19" no;
+      })
       # Needed for firewall
       (helpers: with helpers; let
         inherit (lib) mkMerge;
