@@ -16,9 +16,7 @@ in
   fileSystems = {
     "/" = mkDefault {
       # Handled within stage-2
-      # Do not disable autoResize, it'll take more time, but this does `e2fsck`
-      # which is required for the other resize2fs invocation to work properly in stage-2 :/
-      # autoResize = mkForce false;
+      autoResize = mkForce false;
     };
   };
 
