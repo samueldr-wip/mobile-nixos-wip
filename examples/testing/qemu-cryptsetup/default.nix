@@ -1,9 +1,8 @@
-{ pkgs ? (import ../../../pkgs.nix {})
-}@args':
-let args = args' // { inherit pkgs; }; in
+# Ensure CLI passes down arguments
+{ ... }@args:
 
 let
-  system-build = import ../../../lib/eval-with-configuration.nix (args // {
+  system-build = import ../../../support/nix/shared-entry-point.nix (args // {
     device = "uefi-x86_64";
     configuration = [ { imports = [
       ../../hello/configuration.nix
