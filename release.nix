@@ -22,6 +22,9 @@
 # Mainly to work with some limitations (output size).
 , inNixOSHydra ? false
 
+# Takes a lot of RAM to evaluate `tested` and `testedPlus`.
+, fullRelease ? false
+
 # The current system, for pure evals it must be provided.
 , system ? null
 
@@ -208,8 +211,8 @@ let
   doc = import ./doc {
     inherit pkgs;
   };
-in
-rec {
+
+  release = rec {
   inherit device;
   inherit kernel;
   inherit doc;
@@ -275,7 +278,10 @@ rec {
       pine64-pinephonepro = (evalInstaller { device = "pine64-pinephonepro"; localSystem = "aarch64-linux"; }).outputs.default;
     };
   };
+  };
 
+  # When evaluating a "full" release, on a bigger system (needs a lot of RAM)
+  fullReleaseContents = with release; {
   tested = let
     hasSystem = name: lib.lists.any (el: el == name) systems;
 
@@ -353,4 +359,10 @@ rec {
       '';
     };
   };
-}
+  };
+in
+release // (
+  if fullRelease
+  then fullReleaseContents
+  else {}
+)
