@@ -178,6 +178,10 @@ module Systemd
       .map { _1.split("=", 2) }
       .to_h()
   end
+
+  def stop(*units)
+    verbosely_run("systemctl", "--user", "stop", *units)
+  end
 end
 
 class Systemd::Unit
@@ -227,8 +231,8 @@ class Systemd::Unit
       #   - "exit-code" on "controlled" non-zero exit
       #   - "oom-kill" on OOM kill
       result: data["Result"],
-      status: data["ExecMainStatus"],
-      memory_peak: data["MemoryPeak"],
+      status: data["ExecMainStatus"].to_i,
+      memory_peak: data["MemoryPeak"].to_i,
     }
   end
 
@@ -341,8 +345,78 @@ module Nix
 end
 
 class CiEval
+  attr_reader :attribute_path
+
+  def self.reset()
+    $stderr.puts ""
+    $stderr.puts "(Resetting unit states...)"
+    $stderr.puts ""
+    pattern = "mobile.ci.eval.*.service"
+    # Clean-up failed units
+    Systemd.reset_failed(pattern)
+    # Clean-up successful units
+    Systemd.stop(pattern)
+  end
+
   def initialize(attribute_path)
     @attribute_path = attribute_path
+
+    @unit = Systemd::Unit.new("mobile.ci.eval.#{MobileCI.next_id()}.service", [
+      "nix-instantiate", RELEASE_NIX,
+        "--arg", "systems", '[ "aarch64-linux" "x86_64-linux" ]',
+        "--attr", @attribute_path.join("."),
+    ], properties: {
+      MemoryMax: System.memory_per_thread,
+      MemorySwapMax: 0,
+      # Keep the unit around after a successful run, so the stats are available.
+      # ... except we can't, as `systemd-run` will be kept alive
+      #RemainAfterExit: "true",
+      # ... so instead make the unit "fail" in its stop phase, which will somehow
+      # keep the expected `ExecMainStatus`.
+      ExecStop: "/bin/sh -c 'exit 234'",
+    })
+
+    @run_statuses = [
+    ]
+  end
+
+  def run(memory: :normal)
+
+    case memory
+    when :normal
+      @unit.properties[:MemoryMax] = System.memory_per_thread
+    when :max
+      @unit.properties[:MemoryMax] = System.max_ram
+    else
+      @unit.properties[:MemoryMax] = memory.to_i()
+    end
+
+    result, stderr = @unit.run(capture: { stdout: true, stderr: true, })
+
+    if @unit.state[:result] == "exit-code" && @unit.state[:status] == 0
+      @run_statuses << {
+        status: :success,
+        result: result.strip()
+      }
+    else
+      @run_statuses << {
+        status: :error,
+        type: @unit.state[:result],
+        error: stderr,
+      }
+    end
+  end
+
+  def oom?()
+    status[:status] == :error && status[:type] == "oom-kill"
+  end
+
+  def reset_failed()
+    @unit.reset_failed()
+  end
+
+  def status()
+    @run_statuses.last or { status: :new }
   end
 end
 
@@ -350,8 +424,7 @@ RELEASE_NIX = File.join(__dir__(), "..", "release.nix")
 
 
 # Reset any failed service owned by our namespace.
-Systemd.reset_failed("mobile.ci.eval.*.service")
-
+CiEval.reset()
 
 attributes, _, _ = Nix.eval(expr: %Q{
   let
@@ -379,39 +452,50 @@ attributes, _, _ = Nix.eval(expr: %Q{
   }
 })
 
-units = attributes.map do |path|
-  unit = Systemd::Unit.new("mobile.ci.eval.#{MobileCI.next_id()}.service", [
-    "nix-instantiate", RELEASE_NIX,
-      "--arg", "systems", '[ "aarch64-linux" "x86_64-linux" ]',
-      "--attr", path.join("."),
-  ], properties: {
-    MemoryMax: System.memory_per_thread,
-    MemorySwapMax: 0,
-    # Workaround to get systemd to keep the MemoryPeak value, when
-    # the service result is a success (`exit 0`)...
-    # This makes `systemctl status` show a failure, and `Result=exit-code`...
-    # ... but we get the truth in ExecMainStatus.  ¯\_(ツ)_/¯
-    ExecStop: "/bin/sh -c 'exit 234'",
-  })
-  [path, unit]
+ci_evals = attributes.map do |path|
+  CiEval.new(path)
 end
-  .to_h
 
-final = Parallel.map(units, in_threads: System.num_threads, progress: "First evaluation pass") do |path, unit|
-  result, stderr = unit.run(capture: { stdout: true, stderr: true, })
-  [
-    path,
-    {
-      result: result.strip(),
-      stderr: stderr,
-      state: unit.state(),
-    }
-  ]
+Parallel.each(ci_evals, in_threads: System.num_threads, progress: if VERBOSE then nil else {
+  title: "Evaluating release.nix (first pass)",
+  format: "%t (%c/%C) |%B| %a",
+} end) do |ci_eval|
+  ci_eval.run()
 end
-  .to_h
 
-pp final
+# Pick the evals which OOM'd...
+oom, complete = ci_evals.partition(&:oom?)
+
+# ... and re-evaluate once more, but not in parallel.
+Parallel.each(oom, in_threads: 1, progress: if VERBOSE then nil else {
+  title: "Evaluating release.nix (OOM'd pass)",
+  format: "%t (%c/%C) |%B| %a",
+} end) do |ci_eval|
+  ci_eval.reset_failed()
+  ci_eval.run(memory: :max)
+end
+
+oom, now_complete = ci_evals.partition(&:oom?)
+
+# TODO: dump all the information so I can make decisions on what to do.
+#       (I need peak memory usage!!!)
+
+puts "------------------------------------"
+puts "------------------------------------"
+pp complete
+puts "------------------------------------"
+puts "------------------------------------"
+pp now_complete
+puts "------------------------------------"
+puts "------------------------------------"
+pp oom
+puts "------------------------------------"
+puts "------------------------------------"
+
+pp complete.length
+pp now_complete.length
+pp oom.length
 
 # Also on exit, reset any failed service owned by our namespace.
 # Otherwise it's kind of rude
-Systemd.reset_failed("mobile.ci.eval.*.service") unless ENV["DEBUG_STATE"]
+CiEval.reset() unless ENV["DEBUG_STATE"]
