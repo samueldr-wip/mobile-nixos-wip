@@ -1,0 +1,417 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -p 'ruby.withPackages (r: [ r.parallel r.ruby-progressbar ])'
+#!nix-shell -p nix
+#!nix-shell -i ruby
+
+require "json"
+require "open3"
+require "shellwords"
+require "parallel"
+require "ruby-progressbar"
+
+VERBOSE = ARGV.include?("--verbose")
+
+require "etc"
+
+module MobileCI
+  extend self
+
+  def next_id()
+    @count ||= -1
+    @count += 1
+  end
+end
+
+module PrettyShelljoin
+  refine Array do
+    def pretty_shelljoin()
+      # Weird flex, but for printing it's much better than `#shelljoin`...
+      self.map do |arg|
+        if arg.shellescape.match(/\\/)
+          arg.inspect
+        else
+          arg
+        end
+      end.join(" ")
+    end
+  end
+end
+
+module ByteSizes
+  refine Numeric do
+    def from_KB
+      self * 1024
+    end
+    def from_MB
+      from_KB * 1024
+    end
+    def from_GB
+      from_MB * 1024
+    end
+
+    def as_KB
+      self.to_f / 1024
+    end
+    def as_MB
+      as_KB / 1024
+    end
+    def as_GB
+      as_MB / 1024
+    end
+  end
+end
+using ByteSizes
+
+module System
+  extend self
+
+  attr_reader :num_threads
+  attr_reader :max_ram
+  attr_reader :memory_per_thread
+
+  MIN_THREAD_MEMORY = 2.from_GB
+
+  def ram_count_physical()
+    @max_ram ||= begin
+      kb =
+        File.read("/proc/meminfo")
+          .split(/\n+/)
+          .grep(/^MemTotal:/)
+          .first
+          .scan(/^MemTotal:\s*(\d+) kB$/)
+          .first.first
+          .to_i()
+      kb.from_KB()
+    end
+  end
+
+  def num_cpu_physical()
+    Etc.nprocessors()
+  end
+
+  def setup_resources_allocation()
+    return if @num_threads
+
+    $stderr.puts("")
+    $stderr.puts("System resources allocation:")
+    $stderr.puts("  Number of processors: %d" % [ num_cpu_physical() ])
+    $stderr.puts("  Amount of system memory: %0.2f GiB" % [ ram_count_physical().as_GB() ])
+    @max_ram = ENV["MAX_MEMORY_GB"]&.to_i()&.from_GB
+    @max_ram ||= ram_count_physical()
+    num_threads = ENV["NUM_THREADS"]&.to_i()
+    num_threads ||= num_cpu_physical()
+
+    $stderr.puts("  Amount of threads allowed to use: %d" % [ num_threads ])
+    $stderr.puts("  Amount of memory allowed to use: %0.2f GiB" % [ @max_ram.as_GB() ])
+    $stderr.puts("  Memory per core: %0.2f GiB for %d threads" % [ @max_ram.as_GB() / num_threads, num_threads ] )
+
+    @memory_per_thread =
+      if num_threads == num_cpu_physical()
+        begin
+          amount = (@max_ram.as_GB() / num_threads).ceil().from_GB
+          if amount < MIN_THREAD_MEMORY
+            MIN_THREAD_MEMORY
+          else
+            amount
+          end
+        end
+      else
+        @max_ram / num_threads
+      end
+
+    @num_threads =
+      if num_threads == num_cpu_physical()
+        [
+          num_threads,
+          (@max_ram / @memory_per_thread).floor,
+        ].min()
+      else
+        num_threads
+      end
+
+    $stderr.puts("  ...")
+    $stderr.puts("  Will use: %d processes with %0.2f GiB each; using in total %0.2f GiB of RAM." % [ @num_threads, @memory_per_thread.as_GB(), @num_threads * @memory_per_thread.as_GB() ])
+    $stderr.puts("")
+  end
+
+  setup_resources_allocation()
+end
+
+module Systemd
+  extend self
+
+  using PrettyShelljoin
+
+  def verbosely_slurp(*cmd)
+    $stderr.puts "$ #{cmd.pretty_shelljoin()}" if VERBOSE
+    `#{cmd.shelljoin()}`
+  end
+
+  def verbosely_run(*cmd, capture: {})
+    capture[:stdout] ||= false
+    capture[:stderr] ||= false
+
+    $stderr.puts "$ #{cmd.pretty_shelljoin()}" if VERBOSE
+    
+    if capture[:stdout] && capture[:stderr]
+      stdout, stderr, _ = Open3.capture3(*cmd)
+      return stdout, stderr
+    elsif capture[:stdout]
+      stdout, _ = Open3.capture2(*cmd)
+      return stdout
+    elsif capture[:stderr]
+      stderr, _ = Open3.capture2e(*cmd)
+      return stderr
+    else
+      system(*cmd)
+      return
+    end
+  end
+
+  def reset_failed(*patterns)
+    verbosely_run("systemctl", "--user", "reset-failed", *patterns)
+  end
+
+  def show(unit)
+    verbosely_slurp("systemctl", "--user", "show", unit)
+      .split(/\n+/)
+      .map { _1.split("=", 2) }
+      .to_h()
+  end
+end
+
+class Systemd::Unit
+  attr_reader :name
+  attr_reader :command
+  attr_accessor :properties
+
+  def initialize(name, command, properties: {})
+    @name = name
+    @command = command
+    @properties = properties
+  end
+
+  def show()
+    Systemd.show(@name)
+  end
+
+  def run(capture: {})
+    cmd = [
+      "systemd-run",
+      "--quiet",
+      "--user",
+      "--wait",
+      "--pipe",
+      "--unit=#{@name}",
+
+      *@properties.map do |name, value|
+        [
+          "--property",
+          name.to_s(),
+          value.to_s(),
+        ].join("=")
+      end,
+
+      "--",
+      *@command,
+    ]
+
+    Systemd.verbosely_run(*cmd, capture: capture)
+  end
+
+  def state()
+    data = show()
+    {
+      # `result` is:
+      #   - "success" on zero exit
+      #   - "exit-code" on "controlled" non-zero exit
+      #   - "oom-kill" on OOM kill
+      result: data["Result"],
+      status: data["ExecMainStatus"],
+      memory_peak: data["MemoryPeak"],
+    }
+  end
+
+  def reset_failed()
+    Systemd.reset_failed(@name)
+  end
+end
+
+
+module Nix
+  extend self
+
+  module ToNix
+    refine Numeric do
+      def to_nix()
+        to_s()
+      end
+    end
+
+    refine Symbol do
+      def to_nix()
+        # A bit sketchy... but should be safe enough.
+        to_s()
+      end
+    end
+
+    refine String do
+      def to_nix()
+        self.to_json()
+      end
+
+      def indent(str = "  ")
+        self.gsub(/^/, str)
+      end
+    end
+
+    refine Array do
+      def to_nix()
+        [
+          "[",
+          self.map do |el|
+            [
+              "(",
+              el.to_nix(),
+              ")",
+            ].join("")
+          end.join(" "),
+          "]",
+        ].join(" ")
+      end
+    end
+
+    refine Hash do
+      def to_nix()
+        [
+          "{",
+          *self.map do |key, value|
+            [
+              key.to_nix().strip(),
+              " = ",
+              value.to_nix().strip(),
+              ";"
+            ].join("").indent()
+          end,
+          "}",
+        ].join("\n")
+      end
+    end
+  end
+
+  using ToNix
+  using PrettyShelljoin
+
+  def verbose_cmd(*cmd)
+    $stderr.puts " $ #{cmd.pretty_shelljoin}" if VERBOSE
+  end
+
+  def eval(*cmd_args, expr: nil, args: {}, fail: true)
+    expr = expr.strip() if expr
+    if VERBOSE
+      $stderr.puts "Expression:"
+      $stderr.puts expr.inspect
+    end
+    cmd = ["nix-instantiate", "--json", "--strict", "--eval" ]
+    cmd << "-" if expr
+    args.each do |name, value|
+      cmd << "--arg"
+      cmd << name.to_s()
+      cmd << value.to_nix()
+    end
+    cmd.concat(*cmd_args)
+    verbose_cmd(*cmd)
+    result, stderr, status = Open3.capture3(*cmd, stdin_data: expr)
+
+    if status.success?
+      return JSON.parse(result), stderr, status
+    else
+      if fail
+        $stderr.puts ""
+        $stderr.puts "Nix evaluation unexpectedly failed."
+        $stderr.puts ""
+        $stderr.puts stderr
+        $stderr.puts ""
+        raise "Command unexpectedly failed."
+      else
+        return nil, stderr, status
+      end
+    end
+  end
+end
+
+class CiEval
+  def initialize(attribute_path)
+    @attribute_path = attribute_path
+  end
+end
+
+RELEASE_NIX = File.join(__dir__(), "..", "release.nix")
+
+
+# Reset any failed service owned by our namespace.
+Systemd.reset_failed("mobile.ci.eval.*.service")
+
+
+attributes, _, _ = Nix.eval(expr: %Q{
+  let
+    getAttrs =
+      { path ? [], attrset }:
+      builtins.concatLists
+      (
+        builtins.map
+        (name:
+          let
+            value = attrset.${name};
+            currPath = path ++ [ name ];
+          in
+          if (builtins.typeOf value) != "set" || (value ? drvPath) then [ currPath ]
+          else (getAttrs { path = currPath; attrset = value; })
+        )
+        (builtins.attrNames attrset)
+      )
+    ;
+  in
+  getAttrs {
+    attrset = (import #{RELEASE_NIX} {
+      skipEval = true;
+    });
+  }
+})
+
+units = attributes.map do |path|
+  unit = Systemd::Unit.new("mobile.ci.eval.#{MobileCI.next_id()}.service", [
+    "nix-instantiate", RELEASE_NIX,
+      "--arg", "systems", '[ "aarch64-linux" "x86_64-linux" ]',
+      "--attr", path.join("."),
+  ], properties: {
+    MemoryMax: System.memory_per_thread,
+    MemorySwapMax: 0,
+    # Workaround to get systemd to keep the MemoryPeak value, when
+    # the service result is a success (`exit 0`)...
+    # This makes `systemctl status` show a failure, and `Result=exit-code`...
+    # ... but we get the truth in ExecMainStatus.  ¯\_(ツ)_/¯
+    ExecStop: "/bin/sh -c 'exit 234'",
+  })
+  [path, unit]
+end
+  .to_h
+
+final = Parallel.map(units, in_threads: System.num_threads, progress: "First evaluation pass") do |path, unit|
+  result, stderr = unit.run(capture: { stdout: true, stderr: true, })
+  [
+    path,
+    {
+      result: result.strip(),
+      stderr: stderr,
+      state: unit.state(),
+    }
+  ]
+end
+  .to_h
+
+pp final
+
+# Also on exit, reset any failed service owned by our namespace.
+# Otherwise it's kind of rude
+Systemd.reset_failed("mobile.ci.eval.*.service") unless ENV["DEBUG_STATE"]
