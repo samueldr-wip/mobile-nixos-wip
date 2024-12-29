@@ -134,23 +134,7 @@ let
     )
   ;
 
-  pp = x: builtins.trace x x;
-in
-
-hydrateReleaseJobs (
-  [
-    (makeReleaseJob { path = "documentation"; value =
-      import ./doc {
-        inherit pkgs;
-      };
-    })
-    (makeReleaseJob { path = "shell"; value =
-      import ./shell.nix {
-        inherit pkgs;
-      };
-    })
-  ]
-  ++ (
+  overlayJobs =
     let
       overlayAttrs =
         readOverlayAttributeNames
@@ -186,7 +170,9 @@ hydrateReleaseJobs (
         in
           if !(isList value) then value else
           if (isDerivation drv)
+#/* then { isJob = "XXX"; } # drv
           then drv
+/* */
           else null
         )
         (
@@ -249,7 +235,23 @@ hydrateReleaseJobs (
         )
       )
     )
-  )
+  ;
+in
+
+hydrateReleaseJobs (
+  [
+    (makeReleaseJob { path = "documentation"; value =
+      import ./doc {
+        inherit pkgs;
+      };
+    })
+    (makeReleaseJob { path = "shell"; value =
+      import ./shell.nix {
+        inherit pkgs;
+      };
+    })
+  ]
+  ++ overlayJobs
 )
 
 ### # This weird shuffle is to make the `device` argument depend on the input `pkgs`,
