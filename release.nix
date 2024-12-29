@@ -224,8 +224,8 @@ let
                 };
                 identifier =
                   if isCross
-                  then "${localSystem}.cross-${crossSystem}"
-                  else "${localSystem}.${localSystem}"
+                  then "${localSystem}.cross_${crossSystem}"
+                  else "${localSystem}.native"
                 ;
               }
             )
@@ -235,6 +235,48 @@ let
         )
       )
     )
+  ;
+
+  kernelJobs =
+    builtins.concatLists
+    (
+      builtins.map
+      (device:
+        builtins.map
+        (
+          system:
+          let
+            eval =
+              evalWithConfiguration {
+                nixpkgs.localSystem = knownSystems.${system};
+              } device
+            ;
+            kernel = eval.config.mobile.boot.stage-1.kernel.package;
+            type =
+              if eval.config.nixpkgs.crossSystem == null
+              then "native"
+              else "cross.from_${system}"
+            ;
+          in
+          makeReleaseJob {
+            path = "kernel.${device}.${type}";
+            value = kernel;
+          }
+        )
+        systems
+      )
+      devices
+    )
+  ;
+
+  # TODO: evaluate installers for all devices [native only]
+  installerJobs = 
+    []
+  ;
+
+  # TODO: evaluate example systems [cross and native] [only hello]
+  exampleJobs = 
+    []
   ;
 in
 
@@ -252,6 +294,9 @@ hydrateReleaseJobs (
     })
   ]
   ++ overlayJobs
+  ++ kernelJobs
+  ++ installerJobs
+  ++ exampleJobs
 )
 
 ### # This weird shuffle is to make the `device` argument depend on the input `pkgs`,
@@ -279,16 +324,6 @@ hydrateReleaseJobs (
 ###       (evalWithConfiguration {
 ###         nixpkgs.localSystem = knownSystems.${system};
 ###       } device).config.mobile.outputs.default
-###     )
-###   );
-### 
-###   # `kernel` here is indexed by the system it's being built on first.
-###   # FIXME: can we better filter this?
-###   kernel = lib.genAttrs devices (device:
-###     lib.genAttrs systems (system:
-###       (evalWithConfiguration {
-###         nixpkgs.localSystem = knownSystems.${system};
-###       } device).config.mobile.boot.stage-1.kernel.package
 ###     )
 ###   );
 ### 
