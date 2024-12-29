@@ -4,6 +4,15 @@ if pkgs == null then (builtins.throw "The `pkgs` argument needs to be provided t
 let
   # Original `evalConfig`
   evalConfig = import "${toString pkgs.path}/nixos/lib/eval-config.nix";
+  inherit (pkgs.lib)
+    filterAttrsRecursive
+    getAttrFromPath
+    isAttrs
+    isDerivation
+    isList
+    last
+    mapAttrsRecursive
+  ;
 in
 rec {
   # This should *never* rely on lib or pkgs.
@@ -80,4 +89,192 @@ rec {
       # The simplest eval for a device, with an empty configuration.
       evalFor = evalWithConfiguration {};
     };
+
+  # Prepares intermediary data to expose a job in `release.nix`.
+  makeReleaseJob =
+    { path, value }:
+
+    {
+      isJob = true;
+      inherit path;
+      inherit value;
+    }
+  ;
+
+  makeSkippedOverlayJob =
+    let
+      # Attribute names for which this will not produce a warning.
+      ignoredAttrs = [
+        "override"
+        "overrideAttrs"
+        "overrideDerivation"
+      ];
+    in
+    { path, value }:
+    let
+      name = last path;
+    in
+    if builtins.elem name ignoredAttrs
+    then null
+    else {
+      isJob = false;
+      warning = "warning: Attribute path ${builtins.toJSON path} in overlay produced no job... Type of attribute: ${builtins.typeOf value}";
+    }
+  ;
+
+  # Given a list of `makeReleaseJob` outputs, builds an attrset
+  # out of the produced attr paths.
+  hydrateReleaseJobs =
+
+#x: x; zzzzz_hydrateReleaseJobs = # Weird way to shortcircuit this...
+
+    let
+      inherit (pkgs.lib)
+        mergeAttrs
+      ;
+    in
+    list:
+    builtins.foldl'
+    (
+      attrs: curr:
+      let
+        inherit (curr) path;
+        value =
+          if curr.isJob
+          then curr.value
+          else builtins.throw curr.warning
+        ;
+      in
+      mergeAttrs
+      attrs
+      {
+        # XXX figure out a way to "just list"...
+        "${path}" = "[unrealized job]";
+        #"${path}" = value;
+      }
+    )
+    {}
+    list
+  ;
+
+  flattenPackageSet =
+    let
+      flattenPackageSet' =
+        { path ? [], attrset }:
+        builtins.concatLists (
+          builtins.map (
+            name:
+            let
+              currPath = path ++ [ name ];
+              value = attrset.${name};
+            in
+            if (builtins.typeOf value) == "set" && !(value ? isJob)
+            then flattenPackageSet' { path = currPath; attrset = value; }
+            else
+            [
+              {
+                name = builtins.concatStringsSep "." currPath;
+                inherit value;
+              }
+            ]
+          )
+          (builtins.attrNames attrset)
+        )
+      ;
+    in
+    attrset:
+    builtins.listToAttrs
+    (
+      flattenPackageSet'
+      { inherit attrset; }
+    )
+  ;
+
+  # Given an overlay, and an attrset faking some needed attributes (as workarounds),
+  # will produce an attrset with null values.
+  # Use the result with `mapAttrsRecursive` to evaluate the overlay attributes.
+  readOverlayAttributeNames =
+    workarounds: overlay:
+    let
+      overlayAttrs = builtins.attrNames (overlay {} {});
+      bogusPkgs =
+        rec {
+          __tarpit = _: __tarpit; /* tarpit to allow type-checking */
+          callPackage = expr: args:
+            bogusPkgs.__tarpit
+          ;
+          overrideScope = arg:
+            let
+              scopeAttrs = builtins.attrNames (self);
+              super =
+                bogusPkgs
+                // (builtins.listToAttrs (builtins.map (name: { inherit name; value = super; }) scopeAttrs))
+              ;
+              self = arg self super;
+            in
+              self
+          ;
+          overrideAttrs = __tarpit;
+          pkgsStatic = bogusPkgs;
+        }
+        // (builtins.listToAttrs (builtins.map (name: { inherit name; value = bogusPkgs; }) overlayAttrs))
+        // (workarounds bogusPkgs)
+      ;
+      blockedAttributes =
+        filterAttrsRecursive
+        (_: v: v == false)
+        bogusPkgs
+      ;
+    in
+    (
+      mapAttrsRecursive
+      (path: value: null)
+      (
+        filterAttrsRecursive
+        (name: value: name != "recurseForDerivations" && value != false)
+        ((overlay bogusPkgs bogusPkgs) // blockedAttributes)
+      )
+    )
+  ;
+
+  recurseIntoPackageSet =
+    { path ? [], packageset, eval }:
+    (
+      if path == []
+      then mapAttrsRecursive
+      else builtins.mapAttrs
+    )
+    (
+      path': _:
+      let
+        currPath = path ++ (
+          if isList path'
+          then path'
+          else [ path' ]
+        );
+        value = getAttrFromPath currPath eval.pkgs;
+        name = last currPath;
+      in
+      if name == "recurseForDerivations" || value == null || value == false
+      then null
+      else
+      if (isDerivation value)
+      then currPath
+      else
+        if isAttrs value && value ? recurseForDerivations && value.recurseForDerivations
+        then (
+          recurseIntoPackageSet {
+            path = currPath;
+            packageset = value;
+            inherit eval;
+          }
+        )
+        else
+        makeSkippedOverlayJob {
+          path = currPath;
+          inherit value;
+        }
+    )
+    packageset
+  ;
 }
