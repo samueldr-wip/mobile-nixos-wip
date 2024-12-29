@@ -21,7 +21,7 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
       - name: "Instantiation"
-        run: bin/hydra-eval
+        run: bin/ci-eval
   Kernel_configuration_up-to-date:
     runs-on: [ubuntu-latest]
     steps:
