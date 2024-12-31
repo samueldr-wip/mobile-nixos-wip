@@ -195,7 +195,7 @@ let
         (path':
           let
             value = overlay."${path'}";
-            path = "overlay.${identifier}.${path'}";
+            path = "${identifier}.${path'}";
           in
           if isAttrs value && value ? isJob
           then (value // { inherit path; } )
@@ -226,8 +226,8 @@ let
                 };
                 identifier =
                   if isCross
-                  then "${localSystem}.cross_${crossSystem}"
-                  else "${localSystem}.native"
+                  then "cross.from_${localSystem}.overlay.${crossSystem}"
+                  else "overlay.${localSystem}"
                 ;
               }
             )
@@ -254,14 +254,13 @@ let
               } device
             ;
             kernel = eval.config.mobile.boot.stage-1.kernel.package;
-            type =
-              if eval.config.nixpkgs.crossSystem == null
-              then "native"
-              else "cross.from_${system}"
-            ;
           in
           makeReleaseJob {
-            path = "kernel.${device}.${type}";
+            path =
+              if eval.config.nixpkgs.crossSystem == null
+              then "kernel.native.${device}"
+              else "cross.from_${system}.${device}.kernel"
+            ;
             value = kernel;
           }
         )
@@ -271,9 +270,52 @@ let
     )
   ;
 
-  # TODO: evaluate installers for all devices [native only]
   installerJobs = 
-    []
+  let
+    evalInstaller =
+      { device
+      , localSystem
+      }:
+      let
+        eval = evalWithConfiguration {
+          imports = [
+            ./examples/installer/configuration.nix
+          ];
+          nixpkgs.localSystem = knownSystems.${localSystem};
+        } device;
+      in
+      eval // { inherit (eval.config.mobile) outputs; }
+    ;
+  in
+    builtins.concatLists
+    (
+      builtins.map
+      (device:
+        builtins.map
+        (
+          localSystem:
+          let
+            eval =
+              evalInstaller {
+                inherit device;
+                localSystem = localSystem;
+              }
+            ;
+            installer = eval.outputs.default;
+          in
+          makeReleaseJob {
+            path =
+              if eval.config.nixpkgs.crossSystem == null
+              then "installer.${device}"
+              else "cross.from_${localSystem}.${device}.installer"
+              ;
+            value = installer;
+          }
+        )
+        systems
+      )
+      devices
+    )
   ;
 
   # TODO: evaluate example systems [cross and native] [only hello]
