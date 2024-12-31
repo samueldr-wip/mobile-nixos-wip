@@ -36,11 +36,10 @@ in
 # By default relies on the pinned Nixpkgs.
 , pkgs ? null
 
-# This parameter allows tooling to ask for the “internal” representation
-# of the release jobset. In turn, this can be used to extract a bit more
-# information with a cheaper cost (e.g. extract the attrset structure
-# while not having to evaluate the jobs).
-, withInternalRepresentation ? false
+# This parameter allows the tooling to ask for the “internal” representation
+# of the release jobset CI information. In turn, this can be used to extract
+# a bit more information, which does not make sense for nix-build.
+, evalForCI ? false
 
 # When dryRun is true, the evaluation does not attempt to produce
 # derivations, it only makes the structure of the attrs.
@@ -290,7 +289,9 @@ let
     )
   ;
 
-  internalRepresentation = {
+  # This attribute set contains the jobs (the only thing exposed by default)
+  # and additional metadata / configuration that the CI infrastructure can use.
+  CI = {
     _data = {
       inherit deviceSystems;
       # XXX meeeeeeeeeeeeh... not useful since there's no AArch64 runners ffs.
@@ -325,9 +326,9 @@ let
   };
 in
 
-if withInternalRepresentation
-then internalRepresentation
-else internalRepresentation.jobs
+if evalForCI
+then CI
+else CI.jobs
 
 ###   kernelJobs =
 ###     builtins.concatLists
@@ -434,9 +435,9 @@ else internalRepresentation.jobs
 ### 
 ### in
 ### 
-### if withInternalRepresentation
-### then internalRepresentation
-### else internalRepresentation.jobs
+### if evalForCI
+### then CI
+### else CI.jobs
 ### 
 ### ### # This weird shuffle is to make the `device` argument depend on the input `pkgs`,
 ### ### # while also keeping the original `devices` argument name in the code..
