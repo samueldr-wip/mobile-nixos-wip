@@ -41,6 +41,8 @@ in
 # information with a cheaper cost (e.g. extract the attrset structure
 # while not having to evaluate the jobs).
 , withInternalRepresentation ? false
+
+, dryRun ? false
 }@args':
 
 # Additional arguments handling.
@@ -91,8 +93,6 @@ let
   ;
 
   inherit (mobileReleaseTools)
-    flattenPackageSet
-    hydrateReleaseJobs
     makeReleaseJob
     makeSkippedOverlayJob
     readOverlayAttributeNames
@@ -109,7 +109,6 @@ let
   # Systems we should eval for, per host system.
   # Non-native will be assumed cross.
   crossTargetsFromSystem =
-    system:
     {
       x86_64-linux = [
         "armv7l-linux"
@@ -122,7 +121,7 @@ let
       armv7l-linux = [
         "armv7l-linux"
       ];
-    }.${system}
+    }
   ;
 
   # An attrset of `$device = $system;` entries.
@@ -187,7 +186,7 @@ let
     { system, device, dryRun }:
 
     {
-      cross = genAttrs (builtins.filter (el: el != system) systems) (
+      cross = genAttrs (builtins.filter (el: el != system) systems) ( # XXX wrong list; I need a reverse lookup. i.e. for an aarch64-linux device, cross from x86_64; for an x86_64-linux device, no cross
         localSystem:
         evalAllConfigs { inherit device dryRun; system = localSystem; }
       );
@@ -196,10 +195,105 @@ let
     })
   ;
 
+  overlayJobs =
+    let
+      overlayAttrs =
+        readOverlayAttributeNames
+        (
+          bogusPkgs:
+          # Workarounds for inter-dependencies...
+          # TODO: find cursed Nix usage to remove this?
+          {
+            image-builder = false;
+            mobile-nixos = bogusPkgs // {
+              stage-1 = bogusPkgs // {
+                boot-recovery-menu = bogusPkgs // {
+                  simulator = bogusPkgs.__tarpit;
+                };
+                boot-splash = bogusPkgs // {
+                  simulator = bogusPkgs.__tarpit;
+                };
+              };
+            };
+          }
+        )
+        (import ./overlay/overlay.nix)
+      ;
+
+      evalOverlay =
+        { eval }:
+        mapAttrsRecursive
+        (path: value:
+        let
+          drv = getAttrFromPath value eval.pkgs;
+        in
+          if !(isList value) then value else
+          if (isDerivation drv)
+          then (
+            if dryRun
+            then "<unrealized eval for overlay entry ${builtins.concatStringsSep "." value}>"
+            else drv
+          )
+          else null
+        )
+        (
+          (
+            filterAttrsRecursive (path: value: value != null)
+            (
+              recurseIntoPackageSet { packageset = overlayAttrs; inherit eval; }
+            )
+          )
+        )
+      ;
+
+      evalCrossAndNativeForSystem =
+        system:
+        builtins.listToAttrs
+        (
+          builtins.map
+          (
+            buildingForSystem:
+            let
+              name = buildingForSystem;
+            in {
+              inherit name;
+              value = evalFor (specialConfig {
+                inherit name buildingForSystem system;
+              });
+            }
+          )
+          crossTargetsFromSystem.${system}
+        )
+      ;
+    in
+    (
+      genAttrs (systems) (
+        system:
+        let
+          evals = evalCrossAndNativeForSystem system;
+          crossSystems = builtins.filter (el: el != system) crossTargetsFromSystem.${system};
+        in
+        {
+        } // (optionalAttrs (crossSystems != []) {
+          cross = genAttrs crossSystems (
+            crossSystem:
+            (evalOverlay { eval = evals.${crossSystem}; })
+          );
+        }) // (optionalAttrs (builtins.elem system systems) {
+          native =
+            (evalOverlay { eval = evals.${system}; })
+          ;
+        })
+      )
+    )
+  ;
+
+
   internalRepresentation = {
     _data = {
       inherit deviceSystems;
       # XXX meeeeeeeeeeeeh... not useful since there's no AArch64 runners ffs.
+      # though maybe using qemu binfmt emulation 
 ##### XXX #####      buildInCI = [
 ##### XXX #####        # This list of paths is used by the CI over on github to create
 ##### XXX #####        # a matrix of packages to build.
@@ -213,6 +307,7 @@ let
 
     # XXX
     jobs = {
+      overlay = overlayJobs;
       devices =
         genAttrs devices (
           device:
@@ -220,8 +315,8 @@ let
             system = (evalWithConfiguration {} device).config.mobile.system.system;
           in
           evalDeviceForSystem {
+            inherit dryRun;
             inherit system device;
-            dryRun = true;
           }
         )
       ;
@@ -233,129 +328,6 @@ if withInternalRepresentation
 then internalRepresentation
 else internalRepresentation.jobs
 
-###
-###   evalForSystem =
-###     system:
-###     builtins.listToAttrs
-###     (
-###       builtins.map
-###       (
-###         buildingForSystem:
-###         let
-###           name =
-###             if system == buildingForSystem
-###             then buildingForSystem
-###             else "${buildingForSystem}-cross"
-###           ;
-###         in {
-###           inherit name;
-###           value = evalFor (specialConfig {
-###             inherit name buildingForSystem system;
-###           });
-###         }
-###       )
-###       (crossTargetsFromSystem system)
-###     )
-###   ;
-###   overlayJobs =
-###     let
-###       overlayAttrs =
-###         readOverlayAttributeNames
-###         (
-###           bogusPkgs:
-###           # Workarounds for inter-dependencies...
-###           # TODO: find cursed Nix usage to remove this?
-###           {
-###             image-builder = false;
-###             mobile-nixos = bogusPkgs // {
-###               stage-1 = bogusPkgs // {
-###                 boot-recovery-menu = bogusPkgs // {
-###                   simulator = bogusPkgs.__tarpit;
-###                 };
-###                 boot-splash = bogusPkgs // {
-###                   simulator = bogusPkgs.__tarpit;
-###                 };
-###               };
-###             };
-###           }
-###         )
-###         (import ./overlay/overlay.nix)
-###       ;
-### 
-###       evalOverlay =
-###         { eval }:
-###         builtins.mapAttrs
-###         (name: value:
-###         let
-###           drv = getAttrFromPath value eval.pkgs;
-###         in
-###           if !(isList value) then value else
-###           if (isDerivation drv)
-###           then drv
-###           else null
-###         )
-###         (
-###           flattenPackageSet
-###           (
-###             filterAttrsRecursive (path: value: value != null)
-###             (
-###               recurseIntoPackageSet { packageset = overlayAttrs; inherit eval; }
-###             )
-###           )
-###         )
-###       ;
-### 
-###       overlayToJobs =
-###         { identifier, overlay }:
-### 
-###         builtins.map
-###         (path':
-###           let
-###             value = overlay."${path'}";
-###             path = "${identifier}.${path'}";
-###           in
-###           if isAttrs value && value ? isJob
-###           then (value // { inherit path; } )
-###           else
-###           makeReleaseJob {
-###             inherit path;
-###             inherit value;
-###           }
-###         )
-###         (builtins.attrNames overlay)
-###       ;
-###     in
-###     (
-###       builtins.concatLists (
-###         builtins.concatLists (
-###           builtins.map
-###           (localSystem:
-###             builtins.map
-###             (crossSystem:
-###               let
-###                 isCross = crossSystem != localSystem;
-###               in
-###               overlayToJobs {
-###                 overlay = evalOverlay {
-###                   eval =
-###                     (evalForSystem localSystem)."${crossSystem}${if isCross then "-cross" else ""}"
-###                   ;
-###                 };
-###                 identifier =
-###                   if isCross
-###                   then "cross.from_${localSystem}.overlay.${crossSystem}"
-###                   else "overlay.${localSystem}"
-###                 ;
-###               }
-###             )
-###             (crossTargetsFromSystem localSystem)
-###           )
-###           systems
-###         )
-###       )
-###     )
-###   ;
-### 
 ###   kernelJobs =
 ###     builtins.concatLists
 ###     (
@@ -459,12 +431,6 @@ else internalRepresentation.jobs
 ###     ++ exampleJobs
 ###   ;
 ### 
-###   internalRepresentation = {
-###     attributes = hydrateReleaseJobs { instantiateValues = false; } jobset;
-###     # XXX hydrate from attrs lazily; this will require evaluating all installer to get one installer AFAIUI.
-###     # XXX if we instead (in hydrateReleaseJobs) first eval without values, create the structure, then map into it, that should work out better.
-###     jobs = hydrateReleaseJobs { instantiateValues = true; } jobset;
-###   };
 ### in
 ### 
 ### if withInternalRepresentation

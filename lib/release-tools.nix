@@ -116,47 +116,10 @@ rec {
     in
     if builtins.elem name ignoredAttrs
     then null
-    else {
+    else /*{
       isJob = false;
       warning = "warning: Attribute path ${builtins.toJSON path} in overlay produced no job... Type of attribute: ${builtins.typeOf value}";
-    }
-  ;
-
-  # Given a list of `makeReleaseJob` outputs, builds an attrset
-  # out of the produced attr paths.
-  hydrateReleaseJobs =
-
-#x: x; zzzzz_hydrateReleaseJobs = # Weird way to shortcircuit this...
-
-    let
-      inherit (pkgs.lib)
-        mergeAttrs
-      ;
-    in
-    list:
-    builtins.foldl'
-    (
-      attrs: curr:
-      let
-        inherit (curr) path;
-        value =
-          if curr.isJob
-          then curr.value
-          else builtins.throw curr.warning
-        ;
-      in
-      mergeAttrs
-      attrs
-      {
-        "${path}" =
-          if instantiateValues
-          then value
-          else "[placeholder for ${path}]"
-        ;
-      }
-    )
-    {}
-    list
+    }*/ null # XXX decide what to do about those
   ;
 
   flattenPackageSet =
