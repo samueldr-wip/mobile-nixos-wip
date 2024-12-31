@@ -32,6 +32,12 @@
 # The Nixpkgs this release is evaluated with.
 # By default relies on the pinned Nixpkgs.
 , pkgs ? null
+
+# This parameter allows tooling to ask for the “internal” representation
+# of the release jobset. In turn, this can be used to extract a bit more
+# information with a cheaper cost (e.g. extract the attrset structure
+# while not having to evaluate the jobs).
+, withInternalRepresentation ? false
 }@args':
 
 # Additional arguments handling.
@@ -274,26 +280,35 @@ let
   exampleJobs = 
     []
   ;
+
+  jobset = 
+    [
+      (makeReleaseJob { path = "documentation"; value =
+        import ./doc {
+          inherit pkgs;
+        };
+      })
+      (makeReleaseJob { path = "shell"; value =
+        import ./shell.nix {
+          inherit pkgs;
+        };
+      })
+    ]
+    ++ overlayJobs
+    ++ kernelJobs
+    ++ installerJobs
+    ++ exampleJobs
+  ;
+
+  internalRepresentation = {
+    attributes = hydrateReleaseJobs { instantiateValues = false; } jobset;
+    jobs = hydrateReleaseJobs { instantiateValues = true; } jobset;
+  };
 in
 
-hydrateReleaseJobs (
-  [
-    (makeReleaseJob { path = "documentation"; value =
-      import ./doc {
-        inherit pkgs;
-      };
-    })
-    (makeReleaseJob { path = "shell"; value =
-      import ./shell.nix {
-        inherit pkgs;
-      };
-    })
-  ]
-  ++ overlayJobs
-  ++ kernelJobs
-  ++ installerJobs
-  ++ exampleJobs
-)
+if withInternalRepresentation
+then internalRepresentation
+else internalRepresentation.jobs
 
 ### # This weird shuffle is to make the `device` argument depend on the input `pkgs`,
 ### # while also keeping the original `devices` argument name in the code..
