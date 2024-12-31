@@ -148,9 +148,11 @@ rec {
       mergeAttrs
       attrs
       {
-        # XXX figure out a way to "just list"...
-        "${path}" = "[unrealized job]";
-        #"${path}" = value;
+        "${path}" =
+          if instantiateValues
+          then value
+          else "[placeholder for ${path}]"
+        ;
       }
     )
     {}
