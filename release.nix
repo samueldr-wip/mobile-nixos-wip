@@ -274,8 +274,8 @@ let
           ;
           crossSystems = builtins.filter (el: el != system) crossTargetsFromSystem.${system};
         in
-        {
-        } // (optionalAttrs (crossSystems != []) {
+        ({
+        }) // (optionalAttrs (crossSystems != []) {
           cross = genAttrs crossSystems (
             crossSystem:
             (evalOverlay { eval = evals.${crossSystem}; })
