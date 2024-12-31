@@ -242,12 +242,9 @@ let
           else null
         )
         (
-          (
-            filterAttrsRecursive (path: value: value != null)
-            (
-              recurseIntoPackageSet { packageset = overlayAttrs; inherit eval; }
-            )
-          )
+          filterAttrsRecursive
+          (path: value: value != null)
+          (recurseIntoPackageSet { packageset = overlayAttrs; inherit eval; })
         )
       ;
     in
