@@ -202,6 +202,9 @@ let
 
   overlayJobs =
     let
+      # A cheap evaluation of (most) of the shape of our overlay.
+      # It will be missing `recurseForDerivations` attrsets from `callPackage` invocations.
+      # Though that's not an issue, since those will be found when evaluating.
       overlayAttrs =
         readOverlayAttributeNames
         (
@@ -225,6 +228,7 @@ let
         (import ./overlay/overlay.nix)
       ;
 
+      # Extract the overlayAttrs shape from the "full" `pkgs` from a the given evaluation.
       evalOverlay =
         { eval }:
         mapAttrsRecursive
@@ -253,10 +257,8 @@ let
         system:
         let
           evals =
-            builtins.listToAttrs
-            (
-              builtins.map
-              (
+            builtins.listToAttrs (
+              builtins.map (
                 name:
                 rec {
                   inherit name;
@@ -265,11 +267,13 @@ let
                     buildingForSystem = name;
                   });
                 }
-              )
-              crossTargetsFromSystem.${system}
-            )
+              ) crossTargetsFromSystem.${system})
           ;
-          crossSystems = builtins.filter (el: el != system) crossTargetsFromSystem.${system};
+          crossSystems =
+            builtins.filter
+            (el: el != system)
+            crossTargetsFromSystem.${system}
+          ;
         in
         ({
         }) // (optionalAttrs (crossSystems != []) {
@@ -285,7 +289,6 @@ let
       )
     )
   ;
-
 
   internalRepresentation = {
     _data = {
