@@ -144,8 +144,6 @@ let
           # TODO: find cursed Nix usage to remove this?
           {
             image-builder = false;
-            xorg = bogusPkgs;
-            xlibsWrapper = bogusPkgs.__tarpit;
             mobile-nixos = bogusPkgs // {
               stage-1 = bogusPkgs // {
                 boot-recovery-menu = bogusPkgs // {
@@ -170,9 +168,7 @@ let
         in
           if !(isList value) then value else
           if (isDerivation drv)
-#/* then { isJob = "XXX"; } # drv
           then drv
-/* */
           else null
         )
         (
