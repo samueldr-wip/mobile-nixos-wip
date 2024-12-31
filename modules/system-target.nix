@@ -1,7 +1,6 @@
 { config, lib, pkgs, ... }:
 
 let
-  verbose = false;
   inherit (lib)
     mkOption
     types
@@ -40,15 +39,9 @@ in
     ];
 
     nixpkgs.crossSystem = lib.mkIf isCross (
-      (
-      if verbose
-      then
-        builtins.trace ''
-          Building with crossSystem?: ${selectedPlatform.system} != ${localSystem.system} → ${if isCross then "we are" else "we're not"}.
-                 crossSystem: config: ${selectedPlatform.config}''
-      else
-        lib.id
-      )
+      builtins.trace ''
+        Building with crossSystem?: ${selectedPlatform.system} != ${localSystem.system} → ${if isCross then "we are" else "we're not"}.
+               crossSystem: config: ${selectedPlatform.config}''
       selectedPlatform
     );
   };
