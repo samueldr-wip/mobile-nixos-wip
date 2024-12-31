@@ -42,6 +42,11 @@ in
 # while not having to evaluate the jobs).
 , withInternalRepresentation ? false
 
+# When dryRun is true, the evaluation does not attempt to produce
+# derivations, it only makes the structure of the attrs.
+# This allows verifying that the evaluation for the attrset structure
+# of the release file is cheap, and also makes it possible to introspect
+# the release for attribute-per-attribute instantiating.
 , dryRun ? false
 }@args':
 
@@ -245,32 +250,28 @@ let
           )
         )
       ;
-
-      evalCrossAndNativeForSystem =
-        system:
-        builtins.listToAttrs
-        (
-          builtins.map
-          (
-            buildingForSystem:
-            let
-              name = buildingForSystem;
-            in {
-              inherit name;
-              value = evalFor (specialConfig {
-                inherit name buildingForSystem system;
-              });
-            }
-          )
-          crossTargetsFromSystem.${system}
-        )
-      ;
     in
     (
       genAttrs (systems) (
         system:
         let
-          evals = evalCrossAndNativeForSystem system;
+          evals =
+            builtins.listToAttrs
+            (
+              builtins.map
+              (
+                name:
+                rec {
+                  inherit name;
+                  value = evalFor (specialConfig {
+                    inherit name system;
+                    buildingForSystem = name;
+                  });
+                }
+              )
+              crossTargetsFromSystem.${system}
+            )
+          ;
           crossSystems = builtins.filter (el: el != system) crossTargetsFromSystem.${system};
         in
         {
