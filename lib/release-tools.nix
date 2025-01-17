@@ -91,16 +91,6 @@ rec {
     };
 
   # Prepares intermediary data to expose a job in `release.nix`.
-  makeReleaseJob =
-    { path, value }:
-
-    {
-      isJob = true;
-      inherit path;
-      inherit value;
-    }
-  ;
-
   makeSkippedOverlayJob =
     let
       # Attribute names for which this will not produce a warning.
@@ -120,39 +110,6 @@ rec {
       isJob = false;
       warning = "warning: Attribute path ${builtins.toJSON path} in overlay produced no job... Type of attribute: ${builtins.typeOf value}";
     }*/ null # XXX decide what to do about those
-  ;
-
-  flattenPackageSet =
-    let
-      flattenPackageSet' =
-        { path ? [], attrset }:
-        builtins.concatLists (
-          builtins.map (
-            name:
-            let
-              currPath = path ++ [ name ];
-              value = attrset.${name};
-            in
-            if (builtins.typeOf value) == "set" && !(value ? isJob)
-            then flattenPackageSet' { path = currPath; attrset = value; }
-            else
-            [
-              {
-                name = builtins.concatStringsSep "." currPath;
-                inherit value;
-              }
-            ]
-          )
-          (builtins.attrNames attrset)
-        )
-      ;
-    in
-    attrset:
-    builtins.listToAttrs
-    (
-      flattenPackageSet'
-      { inherit attrset; }
-    )
   ;
 
   # Given an overlay, and an attrset faking some needed attributes (as workarounds),
