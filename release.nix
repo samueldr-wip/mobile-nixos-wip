@@ -88,6 +88,8 @@ let
     unique
   ;
 
+  toAttrPath = pkgs.lib.splitString ".";
+
   inherit (mobileReleaseTools)
     readOverlayAttributeNames
     recurseIntoPackageSet
@@ -163,6 +165,8 @@ let
           ./examples/installer/configuration.nix
         ];
       };
+      # Not a useful build output
+      evalForCross = false;
     };
     "phosh" = {
       configuration = {
@@ -170,6 +174,7 @@ let
           ./examples/phosh/configuration.nix
         ];
       };
+      # Don't even try
       evalForCross = false;
     };
     "plasma-mobile" = {
@@ -178,6 +183,7 @@ let
           ./examples/plasma-mobile/configuration.nix
         ];
       };
+      # Don't even try
       evalForCross = false;
     };
   };
@@ -320,15 +326,62 @@ let
         fromTargetToSystems
         deviceSystems
       ;
-# XXX we now have access to arm64 runners :o
-##### XXX #####      buildInCI = [
-##### XXX #####        # This list of paths is used by the CI over on github to create
-##### XXX #####        # a matrix of packages to build.
-##### XXX #####        [ "devices" "pine64-pinephone" "unconfigured" "x86_64-linux" "hello" ]
-##### XXX #####        [ "devices" "pine64-pinephonePro" "unconfigured" "x86_64-linux" "hello" ]
-##### XXX #####        [ "devices" "pine64-pinephone" "cross" "x86_64-linux" "hello" ]
-##### XXX #####        [ "devices" "pine64-pinephonePro" "cross" "x86_64-linux" "hello" ]
-##### XXX #####      ];
+      # This list of attr paths on `jobs` is used by the CI over on github to create
+      # a matrix of packages to build.
+      buildInCI = map toAttrPath [
+        #
+        # `hello`, native and cross
+        #
+        # NOTE: One device per "family" is sufficient.
+        #       These are not intended for distribution, but for CI.
+        #
+
+        # A64
+        "devices.pine64-pinephone.cross.x86_64-linux.hello"
+        "devices.pine64-pinephone.native.hello"
+        # RK3399
+        "devices.pine64-pinephonepro.cross.x86_64-linux.hello"
+        "devices.pine64-pinephonepro.native.hello"
+        # SDM845 android
+        "devices.oneplus-enchilada.native.hello"
+        "devices.oneplus-enchilada.cross.x86_64-linux.hello"
+        # SC7180 depthcharge
+        "devices.lenovo-lazor.native.hello"
+        "devices.lenovo-lazor.cross.x86_64-linux.hello"
+        # MT8183 depthcharge
+        "devices.lenovo-krane.native.hello"
+        "devices.lenovo-krane.cross.x86_64-linux.hello"
+
+        #
+        # Installers
+        #
+
+        # U-Boot systems
+        "devices.pine64-pinephone.native.installer"
+        "devices.pine64-pinephonepro.native.installer"
+
+        # Depthcharge systems
+        "devices.acer-juniper"
+        "devices.acer-lazor"
+        "devices.lenovo-krane"
+        "devices.lenovo-wormdingler"
+
+        #
+        # Critical packages
+        #
+        "overlay.aarch64-linux.native.mobile-nixos.boot-control"
+        "overlay.aarch64-linux.native.mobile-nixos.cross-canary-test-static"
+        "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-error"
+        "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-splash"
+        "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-recovery-menu"
+        "overlay.aarch64-linux.native.mobile-nixos.stage-1.script-loader"
+        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.cross-canary-test"
+        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.cross-canary-test-static"
+        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-error"
+        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-splash"
+        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-recovery-menu"
+        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader"
+      ];
     };
 
 
