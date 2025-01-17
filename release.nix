@@ -385,7 +385,6 @@ let
     };
 
 
-    # XXX
     jobs = {
       overlay = overlayJobs;
       devices =
