@@ -88,6 +88,8 @@ let
     unique
   ;
 
+  toAttrPath = pkgs.lib.splitString ".";
+
   inherit (mobileReleaseTools)
     readOverlayAttributeNames
     recurseIntoPackageSet
@@ -328,7 +330,7 @@ let
       # a matrix of packages to build.
       # NOTE: This must produce a maximum of 256 outputs.
       #        - https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow#using-a-matrix-strategy
-      buildInCI = [
+      buildInCI = map toAttrPath [
         #
         # `hello`, native and cross
         #
