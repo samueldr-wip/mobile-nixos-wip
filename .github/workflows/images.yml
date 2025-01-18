@@ -36,7 +36,10 @@ jobs:
           ) >> "$GITHUB_OUTPUT"
   Builds:
     name: ${{ matrix.name }}
-    needs: Matrix depend-on-kernels depend-on-overlay
+    needs:
+      - Matrix
+      - depend-on-kernels
+      - depend-on-overlay
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false # Try to build everything
