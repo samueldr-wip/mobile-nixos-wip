@@ -33,3 +33,30 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
       - name: "Kernel configuration up-to-date"
         run: bin/kernel-normalize-all --only-check
+  Build_Matrix:
+    runs-on: [ubuntu-24.04]
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+    steps:
+      - uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
+      - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
+        with:
+          nix_path:
+      - id: build-matrix
+        name: "Generate Build Matrix"
+        run: |
+          PS4=" $ "
+          set -xeu
+          nix-instantiate --show-trace --strict --eval --json ./.ci/build-matrices.nix
+  Builds:
+    name: release.`${{ matrix.attr }}`
+    needs: Build_Matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix: ${{ fromJSON(needs.Build_Matrix.outputs.matrix) }}
+    steps:
+      - uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
+      - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
+        with:
+          nix_path:
+      - run: nix-build ./release.nix --arg systems '[ "x86_64-linux" "aarch64-linux" ]' -A '.#${{ matrix.attr }}'
