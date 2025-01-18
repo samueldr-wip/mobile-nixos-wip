@@ -1,3 +1,5 @@
+{ bucket }:
+
 let
   # These attributes match GitHub's runner names.
   # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
@@ -30,7 +32,7 @@ let
             name = "${attr} @ ${system}";
           }
         )
-        eval._data.filteredBuildInCI
+        eval._data.filteredBuildInCI.${bucket}
       )
   ;
 in
