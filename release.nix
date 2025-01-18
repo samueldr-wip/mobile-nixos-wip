@@ -232,7 +232,7 @@ let
     {
       cross =
         genAttrs
-        (builtins.trace crossTargets crossTargets)
+        crossTargets
         (
         localSystem:
         evalAllConfigs { inherit device dryRun; system = localSystem; releaseConfigs = crossReleaseConfigs; }
