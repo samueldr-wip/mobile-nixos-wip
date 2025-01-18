@@ -223,12 +223,21 @@ let
 
     let
       crossReleaseConfigs = filterAttrs (name: value: value.evalForCross or true) releaseConfigs;
+      crossTargets =
+        builtins.filter
+        (el: el != system && builtins.elem el systems)
+        (fromTargetToSystems.${system})
+      ;
     in
     {
-      cross = genAttrs (builtins.filter (el: el != system) (fromTargetToSystems.${system})) (
+      cross =
+        genAttrs
+        (builtins.trace crossTargets crossTargets)
+        (
         localSystem:
         evalAllConfigs { inherit device dryRun; system = localSystem; releaseConfigs = crossReleaseConfigs; }
-      );
+        )
+      ;
     } // (optionalAttrs (builtins.elem system systems) {
       native = evalAllConfigs { inherit device system dryRun releaseConfigs; };
     })
