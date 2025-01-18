@@ -479,6 +479,10 @@ oom, now_complete = ci_evals.partition(&:oom?)
 
 # TODO: dump all the information so I can make decisions on what to do.
 #       (I need peak memory usage!!!)
+# TODO: dump the resulting data to files
+#         - "result-ci-${date}.json"
+#         - "result-ci-${date}.md"
+# TODO: allow rebuilding the report from an existing json file
 
 puts "------------------------------------"
 puts "------------------------------------"
@@ -499,3 +503,5 @@ pp oom.length
 # Also on exit, reset any failed service owned by our namespace.
 # Otherwise it's kind of rude
 CiEval.reset() unless ENV["DEBUG_STATE"]
+
+# vim: ft=ruby
