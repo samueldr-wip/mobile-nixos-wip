@@ -90,28 +90,6 @@ rec {
       evalFor = evalWithConfiguration {};
     };
 
-  # Prepares intermediary data to expose a job in `release.nix`.
-  makeSkippedOverlayJob =
-    let
-      # Attribute names for which this will not produce a warning.
-      ignoredAttrs = [
-        "override"
-        "overrideAttrs"
-        "overrideDerivation"
-      ];
-    in
-    { path, value }:
-    let
-      name = last path;
-    in
-    if builtins.elem name ignoredAttrs
-    then null
-    else /*{
-      isJob = false;
-      warning = "warning: Attribute path ${builtins.toJSON path} in overlay produced no job... Type of attribute: ${builtins.typeOf value}";
-    }*/ null # XXX decide what to do about those
-  ;
-
   # Given an overlay, and an attrset faking some needed attributes (as workarounds),
   # will produce an attrset with null values.
   # Use the result with `mapAttrsRecursive` to evaluate the overlay attributes.
@@ -191,11 +169,7 @@ rec {
             inherit eval;
           }
         )
-        else
-        makeSkippedOverlayJob {
-          path = currPath;
-          inherit value;
-        }
+        else null
     )
     packageset
   ;
