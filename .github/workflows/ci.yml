@@ -51,7 +51,7 @@ jobs:
           printf "matrix=%s\n" "$(nix-instantiate --show-trace --strict --eval --json ./.ci/build-matrices.nix)"
           ) >> "$GITHUB_OUTPUT"
   Builds:
-    name: release.${{ matrix.attr }} @ ${{ matrix.system }}
+    name: ${{ matrix.name }}
     needs: Build_Matrix
     runs-on: ${{ matrix.os }}
     strategy:
