@@ -28,9 +28,6 @@ let
               os
             ;
             name = "${attr} @ ${system}";
-            needs = "Build_Matrix ${
-              builtins.concatStringsSep " " dependencies
-            }";
           }
         )
         eval._data.filteredBuildInCI
