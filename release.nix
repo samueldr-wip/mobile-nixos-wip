@@ -340,11 +340,11 @@ let
   #
   # NOTE: This must produce a maximum of 256 outputs.
   #        - https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow#using-a-matrix-strategy
-  buildInCI =
+  buildInCI = {
     #
     # Critical packages
     #
-    {
+    overlay = {
       "overlay.aarch64-linux.native.mobile-nixos.boot-control" = [ ];
       "overlay.aarch64-linux.native.mobile-nixos.cross-canary-test-static" = [ ];
       "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-error" = [ "overlay.aarch64-linux.native.mobile-nixos.stage-1.script-loader" ];
@@ -357,79 +357,90 @@ let
       "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-splash" = [ "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader" ];
       "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-recovery-menu" = [ "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader" ];
       "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader" = [ ];
-    }
-    //
+    };
+
     #
     # Kernels
     #
-    (builtins.listToAttrs (builtins.concatLists (builtins.map (
-      device:
-      [
-        { name = "devices.${device}.cross.x86_64-linux.unconfigured.kernel"; value = [ ]; }
-        { name = "devices.${device}.native.unconfigured.kernel"; value = [ ]; }
-      ]
-    ) mobileReleaseTools.all-devices)))
-    //
+    kernels =
+      builtins.listToAttrs
+      (
+        builtins.concatLists (builtins.map (
+        device:
+        [
+          { name = "devices.${device}.cross.x86_64-linux.unconfigured.kernel"; value = [ ]; }
+          { name = "devices.${device}.native.unconfigured.kernel"; value = [ ]; }
+        ]
+        ) mobileReleaseTools.all-devices)
+      )
+    ;
+
     #
-    # Device Builds
+    # Image Builds
     #
-    (mapAttrs (
-      name: value:
-      let
-        # Pick .unconfigured.kernel as a dependency.
-        kernel = 
-          builtins.replaceStrings
-          (builtins.match ".*(\\.[^.]+)(\\.[^.]+)" name)
-          [ ".unconfigured" ".kernel" ]
-          name
-        ;
-      in
-      [
-        kernel
-      ]
-    ) {
-      #
-      # `hello`, native and cross
-      #
-      # NOTE: One device per "family" is sufficient.
-      #       These are not intended for distribution, but for CI.
-      #
+    images =
+      (mapAttrs (
+        name: value:
+        let
+          # Pick .unconfigured.kernel as a dependency.
+          kernel = 
+            builtins.replaceStrings
+            (builtins.match ".*(\\.[^.]+)(\\.[^.]+)" name)
+            [ ".unconfigured" ".kernel" ]
+            name
+          ;
+        in
+        [
+          kernel
+        ]
+      ) {
+        #
+        # `hello`, native and cross
+        #
+        # NOTE: One device per "family" is sufficient.
+        #       These are not intended for distribution, but for CI.
+        #
 
-      # A64
-      "devices.pine64-pinephone.cross.x86_64-linux.hello.default" = [ ];
-      "devices.pine64-pinephone.native.hello.default" = [ ];
-      # RK3399
-      "devices.pine64-pinephonepro.cross.x86_64-linux.hello.default" = [ ];
-      "devices.pine64-pinephonepro.native.hello.default" = [ ];
-      # SDM845 android
-      "devices.oneplus-enchilada.native.hello.default" = [ ];
-      "devices.oneplus-enchilada.cross.x86_64-linux.hello.default" = [ ];
-      # SC7180 depthcharge
-      "devices.lenovo-wormdingler.native.hello.default" = [ ];
-      "devices.lenovo-wormdingler.cross.x86_64-linux.hello.default" = [ ];
-      # MT8183 depthcharge
-      "devices.lenovo-krane.native.hello.default" = [ ];
-      "devices.lenovo-krane.cross.x86_64-linux.hello.default" = [ ];
+        # A64
+        "devices.pine64-pinephone.cross.x86_64-linux.hello.default" = [ ];
+        "devices.pine64-pinephone.native.hello.default" = [ ];
+        # RK3399
+        "devices.pine64-pinephonepro.cross.x86_64-linux.hello.default" = [ ];
+        "devices.pine64-pinephonepro.native.hello.default" = [ ];
+        # SDM845 android
+        "devices.oneplus-enchilada.native.hello.default" = [ ];
+        "devices.oneplus-enchilada.cross.x86_64-linux.hello.default" = [ ];
+        # SC7180 depthcharge
+        "devices.lenovo-wormdingler.native.hello.default" = [ ];
+        "devices.lenovo-wormdingler.cross.x86_64-linux.hello.default" = [ ];
+        # MT8183 depthcharge
+        "devices.lenovo-krane.native.hello.default" = [ ];
+        "devices.lenovo-krane.cross.x86_64-linux.hello.default" = [ ];
 
-      #
-      # Installers
-      #
+        #
+        # Installers
+        #
 
-      # U-Boot systems
-      "devices.pine64-pinephone.native.installer.default" = [ ];
-      "devices.pine64-pinephonepro.native.installer.default" = [ ];
+        # U-Boot systems
+        "devices.pine64-pinephone.native.installer.default" = [ ];
+        "devices.pine64-pinephonepro.native.installer.default" = [ ];
 
-      # Depthcharge systems
-      "devices.acer-juniper.native.installer.default" = [ ];
-      "devices.acer-lazor.native.installer.default" = [ ];
-      "devices.lenovo-krane.native.installer.default" = [ ];
-      "devices.lenovo-wormdingler.native.installer.default" = [ ];
-  })
-  ;
+        # Depthcharge systems
+        "devices.acer-juniper.native.installer.default" = [ ];
+        "devices.acer-lazor.native.installer.default" = [ ];
+        "devices.lenovo-krane.native.installer.default" = [ ];
+        "devices.lenovo-wormdingler.native.installer.default" = [ ];
+      })
+    ;
+  };
 
   filteredBuildInCI =
-    filterAttrs
-    (name: value: (attrByPath (toAttrPath name) false CI.jobs) != false)
+    mapAttrs
+    (jobsList: jobs:
+      filterAttrs
+      (jobName: deps: (attrByPath (toAttrPath jobName) false CI.jobs) != false)
+      jobs
+    )
     buildInCI
   ;
 
