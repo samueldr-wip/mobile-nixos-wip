@@ -47,7 +47,9 @@ jobs:
         run: |
           PS4=" $ "
           set -xeu
-          nix-instantiate --show-trace --strict --eval --json ./.ci/build-matrices.nix
+          (
+          printf "matrix=%s\n" "$(nix-instantiate --show-trace --strict --eval --json ./.ci/build-matrices.nix)"
+          ) >> "$GITHUB_OUTPUT"
   Builds:
     name: release.`${{ matrix.attr }}`
     needs: Build_Matrix
