@@ -7,14 +7,14 @@ on:
 
 jobs:
   Parse_nix:
-    runs-on: [ubuntu-latest]
+    runs-on: [ubuntu-24.04]
     steps:
       - uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
       - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
       - name: "Parse .nix files"
         run: .ci/parse-all.sh
   Instantiation:
-    runs-on: [ubuntu-latest]
+    runs-on: [ubuntu-24.04]
     steps:
       - uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
       - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
@@ -23,7 +23,7 @@ jobs:
       - name: "Instantiation"
         run: bin/ci-eval
   Kernel_configuration_up-to-date:
-    runs-on: [ubuntu-latest]
+    runs-on: [ubuntu-24.04]
     steps:
       - uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
       - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
