@@ -1,0 +1,42 @@
+name: Overlay
+on:
+  push:
+    branches:
+      - "development"
+      - "wip/new-release"
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  Matrix:
+    runs-on: [ubuntu-24.04]
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+    steps:
+      - uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
+      - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
+        with:
+          nix_path:
+      - id: build-matrix
+        name: "Generate Build Matrix"
+        env:
+          BUCKET: overlay
+        run: |
+          PS4=" $ "
+          set -xeu
+          (
+          printf "matrix=%s\n" "$(nix-instantiate --show-trace --argstr bucket "$BUCKET" --strict --eval --json ./.ci/build-matrices.nix)"
+          ) >> "$GITHUB_OUTPUT"
+  Builds:
+    name: ${{ matrix.name }}
+    needs: Matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # Try to build everything
+      matrix: ${{ fromJSON(needs.Matrix.outputs.matrix) }}
+    steps:
+      - uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
+      - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
+        with:
+          nix_path:
+      - run: nix-build ./release.nix --arg system "${{ matrix.system }}" --attr '${{ matrix.attr }}'
