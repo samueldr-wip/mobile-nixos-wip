@@ -447,7 +447,7 @@ attributes, _, _ = Nix.eval(expr: %Q{
   in
   getAttrs {
     attrset = (import #{RELEASE_NIX} {
-      skipEval = true;
+      dryRun = true;
     });
   }
 })
