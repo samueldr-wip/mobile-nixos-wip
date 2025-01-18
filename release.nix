@@ -332,13 +332,16 @@ let
     )
   ;
 
-  # This list of attr paths on `jobs` is used by the CI over on github to create
-  # a matrix of packages to build.
+  #
+  # This attrset contains buckets of attr paths for `jobs`.
+  #
+  # It is used by the GitHub workflow to build matrices.
   #
   # Dependencies can be described using the list on the attrpaths.
   # With proper cache configuration, it allows re-using outputs.
+  # NOTE: GibHub actions can't use the dependencies at this point in time.
   #
-  # NOTE: This must produce a maximum of 256 outputs.
+  # NOTE: This must produce a maximum of 256 outputs. (Per-bucket?)
   #        - https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow#using-a-matrix-strategy
   buildInCI = {
     #
