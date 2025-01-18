@@ -62,4 +62,4 @@ jobs:
       - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
         with:
           nix_path:
-      - run: nix-build ./release.nix --arg systems '[ "${{ matrix.system }}" ]' --attr '${{ matrix.attr }}'
+      - run: nix-build ./release.nix --arg system "${{ matrix.system }}" --attr '${{ matrix.attr }}'
