@@ -14,7 +14,7 @@ let
       eval = import ../release.nix {
         evalForCI = true;
         dryRun = true;
-        systems = [ system ];
+        inherit system;
       };
     in
       builtins.attrValues (
