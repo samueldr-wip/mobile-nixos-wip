@@ -51,7 +51,7 @@ jobs:
           printf "matrix=%s\n" "$(nix-instantiate --show-trace --strict --eval --json ./.ci/build-matrices.nix)"
           ) >> "$GITHUB_OUTPUT"
   Builds:
-    name: release.`${{ matrix.attr }}`
+    name: release.${{ matrix.attr }} @ ${{ matrix.system }}
     needs: Build_Matrix
     runs-on: ${{ matrix.os }}
     strategy:
@@ -61,4 +61,4 @@ jobs:
       - uses: "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72"
         with:
           nix_path:
-      - run: nix-build ./release.nix --arg systems '[ "x86_64-linux" "aarch64-linux" ]' -A '.#${{ matrix.attr }}'
+      - run: nix-build ./release.nix --arg systems '[ "${{ matrix.system }}" ]' -A '.#${{ matrix.attr }}'
