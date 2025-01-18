@@ -77,12 +77,14 @@ let
   ;
 
   inherit (pkgs.lib)
+    attrByPath
     filterAttrs
     filterAttrsRecursive
     genAttrs
     getAttrFromPath
     isDerivation
     isList
+    mapAttrs
     mapAttrsRecursive
     optionalAttrs
     unique
@@ -201,13 +203,18 @@ let
       );
       let
         eval = evalWithConfiguration configuration device;
+        dryRunValue = valueName: "<unrealized eval for ${device} ${valueName}>";
+        attrs = [
+          "default" "initrd" "toplevel"
+        ];
       in
       if dryRun
-      then "<unrealized eval for ${device} ${name}>"
+      then {
+        kernel = dryRunValue "kernel";
+      } // (genAttrs attrs dryRunValue)
       else {
-        inherit (eval.config.mobile.outputs) default initrd toplevel;
         kernel = eval.config.mobile.boot.stage-1.kernel.package;
-      }
+      } // (genAttrs attrs (name: eval.config.mobile.outputs.${name}) attrs)
     )
   ;
 
@@ -237,7 +244,6 @@ let
         (
           bogusPkgs:
           # Workarounds for inter-dependencies...
-          # TODO: find cursed Nix usage to remove this?
           {
             image-builder = false;
             mobile-nixos = bogusPkgs // {
@@ -317,6 +323,107 @@ let
     )
   ;
 
+  # This list of attr paths on `jobs` is used by the CI over on github to create
+  # a matrix of packages to build.
+  #
+  # Dependencies can be described using the list on the attrpaths.
+  # With proper cache configuration, it allows re-using outputs.
+  #
+  # NOTE: This must produce a maximum of 256 outputs.
+  #        - https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow#using-a-matrix-strategy
+  buildInCI =
+    #
+    # Critical packages
+    #
+    {
+      "overlay.aarch64-linux.native.mobile-nixos.boot-control" = [ ];
+      "overlay.aarch64-linux.native.mobile-nixos.cross-canary-test-static" = [ ];
+      "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-error" = [ "overlay.aarch64-linux.native.mobile-nixos.stage-1.script-loader" ];
+      "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-splash" = [ "overlay.aarch64-linux.native.mobile-nixos.stage-1.script-loader" ];
+      "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-recovery-menu" = [ "overlay.aarch64-linux.native.mobile-nixos.stage-1.script-loader" ];
+      "overlay.aarch64-linux.native.mobile-nixos.stage-1.script-loader" = [ ];
+      "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.cross-canary-test" = [ ];
+      "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.cross-canary-test-static" = [ ];
+      "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-error" = [ "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader" ];
+      "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-splash" = [ "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader" ];
+      "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-recovery-menu" = [ "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader" ];
+      "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader" = [ ];
+    }
+    //
+    #
+    # Kernels
+    #
+    (builtins.listToAttrs (builtins.concatLists (builtins.map (
+      device:
+      [
+        { name = "devices.${device}.cross.x86_64-linux.unconfigured.kernel"; value = [ ]; }
+        { name = "devices.${device}.native.unconfigured.kernel"; value = [ ]; }
+      ]
+    ) mobileReleaseTools.all-devices)))
+    //
+    #
+    # Device Builds
+    #
+    (mapAttrs (
+      name: value:
+      let
+        # Pick .unconfigured.kernel as a dependency.
+        kernel = 
+          builtins.replaceStrings
+          (builtins.match ".*(\\.[^.]+)(\\.[^.]+)" name)
+          [ ".unconfigured" ".kernel" ]
+          name
+        ;
+      in
+      [
+        kernel
+      ]
+    ) {
+      #
+      # `hello`, native and cross
+      #
+      # NOTE: One device per "family" is sufficient.
+      #       These are not intended for distribution, but for CI.
+      #
+
+      # A64
+      "devices.pine64-pinephone.cross.x86_64-linux.hello.default" = [ ];
+      "devices.pine64-pinephone.native.hello.default" = [ ];
+      # RK3399
+      "devices.pine64-pinephonepro.cross.x86_64-linux.hello.default" = [ ];
+      "devices.pine64-pinephonepro.native.hello.default" = [ ];
+      # SDM845 android
+      "devices.oneplus-enchilada.native.hello.default" = [ ];
+      "devices.oneplus-enchilada.cross.x86_64-linux.hello.default" = [ ];
+      # SC7180 depthcharge
+      "devices.lenovo-wormdingler.native.hello.default" = [ ];
+      "devices.lenovo-wormdingler.cross.x86_64-linux.hello.default" = [ ];
+      # MT8183 depthcharge
+      "devices.lenovo-krane.native.hello.default" = [ ];
+      "devices.lenovo-krane.cross.x86_64-linux.hello.default" = [ ];
+
+      #
+      # Installers
+      #
+
+      # U-Boot systems
+      "devices.pine64-pinephone.native.installer.default" = [ ];
+      "devices.pine64-pinephonepro.native.installer.default" = [ ];
+
+      # Depthcharge systems
+      "devices.acer-juniper.native.installer.default" = [ ];
+      "devices.acer-lazor.native.installer.default" = [ ];
+      "devices.lenovo-krane.native.installer.default" = [ ];
+      "devices.lenovo-wormdingler.native.installer.default" = [ ];
+  })
+  ;
+
+  filteredBuildInCI =
+    filterAttrs
+    (name: value: (attrByPath (toAttrPath name) false CI.jobs) != false)
+    buildInCI
+  ;
+
   # This attribute set contains the jobs (the only thing exposed by default)
   # and additional metadata / configuration that the CI infrastructure can use.
   CI = {
@@ -325,65 +432,9 @@ let
         fromLocalSystemToCrossTargets
         fromTargetToSystems
         deviceSystems
+        buildInCI
+        filteredBuildInCI
       ;
-      # This list of attr paths on `jobs` is used by the CI over on github to create
-      # a matrix of packages to build.
-      # NOTE: This must produce a maximum of 256 outputs.
-      #        - https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow#using-a-matrix-strategy
-      buildInCI = map toAttrPath [
-        #
-        # `hello`, native and cross
-        #
-        # NOTE: One device per "family" is sufficient.
-        #       These are not intended for distribution, but for CI.
-        #
-
-        # A64
-        "devices.pine64-pinephone.cross.x86_64-linux.hello"
-        "devices.pine64-pinephone.native.hello"
-        # RK3399
-        "devices.pine64-pinephonepro.cross.x86_64-linux.hello"
-        "devices.pine64-pinephonepro.native.hello"
-        # SDM845 android
-        "devices.oneplus-enchilada.native.hello"
-        "devices.oneplus-enchilada.cross.x86_64-linux.hello"
-        # SC7180 depthcharge
-        "devices.lenovo-lazor.native.hello"
-        "devices.lenovo-lazor.cross.x86_64-linux.hello"
-        # MT8183 depthcharge
-        "devices.lenovo-krane.native.hello"
-        "devices.lenovo-krane.cross.x86_64-linux.hello"
-
-        #
-        # Installers
-        #
-
-        # U-Boot systems
-        "devices.pine64-pinephone.native.installer"
-        "devices.pine64-pinephonepro.native.installer"
-
-        # Depthcharge systems
-        "devices.acer-juniper"
-        "devices.acer-lazor"
-        "devices.lenovo-krane"
-        "devices.lenovo-wormdingler"
-
-        #
-        # Critical packages
-        #
-        "overlay.aarch64-linux.native.mobile-nixos.boot-control"
-        "overlay.aarch64-linux.native.mobile-nixos.cross-canary-test-static"
-        "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-error"
-        "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-splash"
-        "overlay.aarch64-linux.native.mobile-nixos.stage-1.boot-recovery-menu"
-        "overlay.aarch64-linux.native.mobile-nixos.stage-1.script-loader"
-        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.cross-canary-test"
-        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.cross-canary-test-static"
-        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-error"
-        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-splash"
-        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.boot-recovery-menu"
-        "overlay.x86_64-linux.cross.aarch64-linux.mobile-nixos.stage-1.script-loader"
-      ];
     };
 
 
