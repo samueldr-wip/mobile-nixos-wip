@@ -1,7 +1,9 @@
 name: CI
 on:
   push:
-    branches: [ "development" ]
+    branches:
+      - "development"
+      - "wip/new-release"
   pull_request:
     branches: [ "**" ]
 
