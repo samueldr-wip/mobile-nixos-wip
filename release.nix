@@ -214,7 +214,7 @@ let
       } // (genAttrs attrs dryRunValue)
       else {
         kernel = eval.config.mobile.boot.stage-1.kernel.package;
-      } // (genAttrs attrs (name: eval.config.mobile.outputs.${name}) attrs)
+      } // (genAttrs attrs (name: eval.config.mobile.outputs.${name}))
     )
   ;
 
