@@ -97,9 +97,36 @@ class UI
         }[value]
       end
 
-    # Rotate and display according to panel native orientation.
-    case LVGUI.get_panel_orientation()
-    when LVGUI::PanelOrientation::RIGHT_UP
+    # This first goes counter to the panel's native rotation.
+    image_rotation =
+      case LVGUI.get_panel_orientation()
+      when LVGUI::PanelOrientation::LEFT_UP # installed 90° clockwise
+        -90
+      when LVGUI::PanelOrientation::RIGHT_UP # installed 90° counter-clockwise (270° clockwise)
+        -270
+      when LVGUI::PanelOrientation::BOTTOM_UP # installed upside-down
+        -180
+      else
+        -0
+      end
+
+    # Then we add back the native rotation of the picture.
+    image_rotation +=
+      case baked_in_rotation
+      when :clockwise
+        90
+      when :counter_clockwise
+        270
+      when :upside_down
+        180
+      else # :normal
+        0
+      end
+
+    # Rotate and display according to computed rotation.
+    # (Clamping -90 → 270 via modulo)
+    case image_rotation % 360
+    when 270 # (-90)
       # Rotate coords
       tmp = x
       x = y
@@ -108,7 +135,7 @@ class UI
       bgrt = add_canvas(parent, height, width)
       bgrt.rotate(previous.get_img(), 270, 0, 0, 0, 0)
       previous.del()
-    when LVGUI::PanelOrientation::LEFT_UP
+    when 90 # (-270)
       # Rotate coords
       tmp = x
       x = @screen.get_width() - y
@@ -117,7 +144,7 @@ class UI
       bgrt = add_canvas(parent, height, width)
       bgrt.rotate(previous.get_img(), 90, 0, 0, 0, 0)
       previous.del()
-    when LVGUI::PanelOrientation::BOTTOM_UP
+    when 180
       # Rotate coords
       x = @screen.get_width() - x
       y = @screen.get_height() - y
