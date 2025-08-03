@@ -22,15 +22,12 @@ in
     pname = "lvgui";
     version = "2025-08-03";
 
-    src = builtins.fetchGit /Users/samuel/Projects/mobile-nixos/projects/lvgui-hal-panel-rotation;
-    /*
     src = fetchFromGitHub {
       repo = "lvgui";
       owner = "mobile-nixos";
       rev = "4d1c176c2cfdf11a1e9624ae702c1dafd694c33c";
       hash = "sha256-6gHTdu8TMn7JQ7dSdCPi2/VXeq+p8iHnmojm+cHbew8=";
     };
-    */
 
     # Document `LVGL_ENV_SIMULATOR` in the built headers.
     # This allows the mrbgem to know about it.
