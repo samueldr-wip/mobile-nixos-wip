@@ -2,11 +2,13 @@ class Tasks::Crash < SingletonTask
   def initialize()
     # Runs before SwitchRoot
     Targets[:SwitchRoot].add_dependency(:Task, self)
-    # And after /mnt is available
-    add_dependency(:Mount, "/mnt")
+    add_dependency(:Target, :Graphics)
   end
 
   def run()
-    raise "This is an exception from init!"
+    passphrase = Progress.ask("Passphrase for nothing...")
+    Progress.exec_with_message("Waiting for testing...") do
+      sleep(10)
+    end
   end
 end
