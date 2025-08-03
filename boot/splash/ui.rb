@@ -80,8 +80,22 @@ class UI
     bgrt = add_canvas(parent, width, height)
     bgrt.draw_img(0, 0, "/bgrt.bmp", LVGL::LVStyle::STYLE_PLAIN)
 
+    # See the ACPI specification for the status bit and other values.
+    # https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#boot-graphics-resource-table-bgrt
     x = File.read("/sys/firmware/acpi/bgrt/xoffset").to_i
     y = File.read("/sys/firmware/acpi/bgrt/yoffset").to_i
+    baked_in_rotation =
+      begin
+        value = File.read("/sys/firmware/acpi/bgrt/status").to_i
+        # Keep only bits 1 and 2.
+        value = (value & 0b110) >> 1
+        {
+          0b00 => :normal,
+          0b01 => :clockwise,
+          0b10 => :upside_down,
+          0b11 => :counter_clockwise,
+        }[value]
+      end
 
     # Rotate and display according to panel native orientation.
     case LVGUI.get_panel_orientation()
