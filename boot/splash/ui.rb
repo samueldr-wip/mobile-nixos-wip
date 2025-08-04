@@ -84,7 +84,8 @@ class UI
     # https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#boot-graphics-resource-table-bgrt
     x = File.read("/sys/firmware/acpi/bgrt/xoffset").to_i
     y = File.read("/sys/firmware/acpi/bgrt/yoffset").to_i
-    baked_in_rotation =
+    # Rotation to be applied to the image orientated on the panel's native orientation.
+    rotation_needed =
       begin
         value = File.read("/sys/firmware/acpi/bgrt/status").to_i
         # Keep only bits 1 and 2.
@@ -111,8 +112,8 @@ class UI
       end
 
     # Then we add back the native rotation of the picture.
-    image_rotation +=
-      case baked_in_rotation
+    image_rotation -=
+      case rotation_needed
       when :clockwise
         90
       when :counter_clockwise
