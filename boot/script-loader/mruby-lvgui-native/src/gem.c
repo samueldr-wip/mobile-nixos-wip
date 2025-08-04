@@ -4011,7 +4011,7 @@ mrb_mruby_lvgui_native_lvgui_set_lv_style__text_sel_color(mrb_state *mrb, mrb_va
 static mrb_value
 mrb_mruby_lvgui_native_lvgui_get_lv_style__text_font(mrb_state *mrb, mrb_value self)
 {
-    lv_font_t * ret;
+    const lv_font_t * ret;
   
     //
     // Parameters handling
