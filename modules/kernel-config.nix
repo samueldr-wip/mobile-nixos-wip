@@ -278,6 +278,19 @@ in
         NETFILTER_NETLINK_LOG = yes;
         NETFILTER_XT_TARGET_NFLOG = module;
       })
+
+      # Hardware-accelerated functions
+      (helpers: with helpers; let
+        inherit (lib) mkMerge;
+        # TODO drop when we fix modular kernels
+        module = yes;
+      in {
+        CRYPTO_USER_API_SKCIPHER = yes;
+        CRYPTO_USER_API_RNG = yes;
+        CRYPTO_USER_API_AEAD = yes;
+        # Undesirable; “This should only be enabled for CAVP testing”.
+        CRYPTO_USER_API_RNG_CAVP = option no;
+      })
     ];
 
     nixpkgs.overlays = [(final: super: {
