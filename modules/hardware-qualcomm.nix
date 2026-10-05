@@ -133,6 +133,11 @@ in
         (helpers: with helpers; {
           ARCH_QCOM = lib.mkDefault (whenAtLeast "4.1" yes);
           ARCH_MSM = lib.mkDefault (whenOlder "4.1" yes);
+
+          # Hardware-accelerated features
+          CRYPTO_DEV_QCE = yes;
+          CRYPTO_DEV_QCE_ENABLE_ALL = yes;
+          CRYPTO_DEV_QCOM_RNG = yes;
         })
       ];
     })
